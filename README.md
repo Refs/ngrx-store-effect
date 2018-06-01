@@ -1,5 +1,15 @@
 #  ngrx
 
+## the course preknowledge
+
+1. Feature Modules: https://angular.io/guide/feature-modules
+2. Lazy Loading Feature Modules : https://angular.io/guide/feature-modules
+3. angular && webpack : https://www.youtube.com/watch?v=qmIkoAnttlE
+
+## Project Setup with Webpack
+
+
+
 ## ngrx store overview (course 5)
 
 1. change detection and the performance benefits that we get from using a single store or rather an observable approach to managing state in our applications . 
