@@ -6,7 +6,13 @@
 2. Lazy Loading Feature Modules : https://angular.io/guide/feature-modules
 3. angular && webpack : https://www.youtube.com/watch?v=qmIkoAnttlE
 
-## Project Setup with Webpack
+## Project Setup with Webpack  @ngrx/schematics
+
+1. To use @ngrx/schematics as the default collection in your Angular CLI project, add it to your angular.json:
+
+* ng set defaults.schematics.collection=@ngrx/schematics(angular 5) 
+* ng config cli.defaultCollection @ngrx/schematics (angular 6)
+
 
 
 
@@ -65,8 +71,6 @@
     +-- services/
     +-- store/
 ```
-
-
 
 
 
