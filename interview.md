@@ -11,11 +11,18 @@
 ### webpack 打包的小型项目
 ### express + mongoose + jwt(jsonWebToken)  基于 mongodb 非关系型数据库的 restful 风格后台
 ### express + knex + jwt 基于 mysql 关系型数据库restful 风格后台
-### 
+
+## 工具
+
+### 普通ionicApp : vscode(开发) + CordovaDevtools/DebuggerPlugin(调试) + Genymotion/AndroidEmulator(测试) + xcode(测试) + android studio()
+### 大型ionicApp : vscode(开发) + CordovaDevtools/DebuggerPlugin(调试) + @ngrx/store-devtools(状态调试) +  Genymotion/AndroidEmulator(测试) + xcode(测试)
+### 普通angularWeb : vscode(开发) + CordovaDevtools/DebuggerPlugin(调试) + Genymotion/AndroidEmulator(测试) + chrome(测试)
+### 大型angularWeb : vscode(开发) + ChromeDevtools/DebuggerPlugin(调试) + @ngrx/store-devtools(状态调试) + chrome(测试)
 
 ## 企业项目
 
 ### 豆瓣一刻 Authentication Feature model && Splash Screen logic
+
 
 ### 大恒光伏智能管理平台
 
@@ -23,6 +30,6 @@
 
 ## 开源项目 
 
-### node.js restful API
+### node_restful_api
 
 
