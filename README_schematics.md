@@ -77,6 +77,37 @@ npm install -g @angular-devkit/schematics-cli
 
 schematics schematic --name=fetch-actions
 
+cd fetch-actions
+
+yarn | npm install 
+
+yarn add @ngrx/schematics | npm install -s @ngrx/schematics@5.2.0
+
 ```
 
-To create custom schematic first of all , we are going tp set up a schematic cli globally , and schematic provide us with a global command called schematics 
+To create custom schematic first of all , we are going tp set up a schematic cli globally , and schematic provide us with handy command called schematics, then we're going to specify templates for our new schematic that called schematic , then we pass in our schematics collection name , in our case it will be fetch-actions, then we're going to move to our newly created folder set up all dependencies via npm, then we're adding ngrx/schematics as dependency because we're going to use their code base and just provide our own template for a schematic 
+
+What is the structure of every schematic ?
+
+```json
+{
+  "$schema": "./node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "fetch-actions": {
+      "aliases": [ "fa" ],
+      "description": "Generates ngrx fetch actions",
+      "factory": "./fetch-actions",
+      "schema": "./node_modules/@ngrx/schematics/src/action/schema.json"
+    }
+  }
+}
+
+// factory file that grabs all arguments from Cli , parsing them , transforming and passing to our templates
+
+// schema stands for specify all types of our arguments, what arguments are required , description for each argument such kind of documentation
+
+```
+
+The main file for each collection is called collection.json file
+
+
