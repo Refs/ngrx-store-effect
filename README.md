@@ -233,7 +233,6 @@ export function reducer(
         loaded: false
       }
     }
-
   }
 
   return state;
@@ -243,4 +242,6 @@ export function reducer(
 ```
 
 2. store/index.ts
+
+> The index.ts contains all of the reducers for the particular products feature module . Becasue we have a products module we're acturally going to export a new interface and we're gong to say this is the products state . 
 
