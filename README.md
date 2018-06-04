@@ -4,6 +4,16 @@
 
 1. Creators : 类 ， 通过类我们可以去实例化（产生）一个对象；
 2. factory: 函数，可以根据不同的参数，去生成各种不同的东西；
+3. indexable Types https://www.typescriptlang.org/docs/handbook/interfaces.html#indexable-types
+```ts
+// topping.model.ts
+export interface Topping {
+  id?: number;
+  name?: string;
+  [key: string]: any;
+}
+
+```
 
 ## the course preknowledge
 
@@ -97,9 +107,12 @@ export interface Action {
 
 ```js
 import { Action } from '@ngrx/store';
+import { Pizza } from '../src/products/models/pizza.model.ts';
 
 // Let 's define some new constants , because we talked about namespacing . What I'm going todo is call this [Products], so this acts as a kind of namespace you don't have todo it , because in this example we're not acturally going to load pizzas anywhere else in our application, but it's a good practise to namespace these as per the feature modules(使用 feature module 的名字 作为 nameSpacing name ) 
 // load pizzas
+
+//-----------1. action constants
 export const LOAD_PIZZAS = '[Products] Load Pizzas';
 export const LOAD_PIZZAS_FAIL = '[Products] Load Pizzas Fail';
 export const LOAD_PIZZAS_SUCCESS = '[Products] Load Pizzas Success';
@@ -107,12 +120,127 @@ export const LOAD_PIZZAS_SUCCESS = '[Products] Load Pizzas Success';
 // So we've defined the three things that can happed when we load the pizzas . First of all we want to dispatch an action called load the pizzas that's either going to fail or it's going to succeed . If it fails we can dispatch LOAD_PIZZAS_FAIL action ,when it's successful we can dispatch LOAD_PIZZAS_SUCCESS
 // we're communicating here kind of via events and  these events describe the steps of what is happending in our application and we can then respond to them accordingly . So you may have guessed the next step is that we want to acturally define some action creators (creators 指的就是类，通过这些类 我们可以去实例或action) 
 
+// The reason we imported Action interface is just to make sure for typescript purpose 
+
+//-------2 action creators
+export class LoadPizzas implements Action {
+  readonly type = LOAD_PIZZAS;
+}
+
+export class LoadPizzasFail implements Action {
+  readonly type = LOAD_PIZZAS_FAIL;
+  // we can pass any message as a payload property back from the server if there is an error
+  constructor ( public payload: any ) {
+    
+  }
+}
+
+export class LoadPizzasFail implements Action {
+  readonly type = LOAD_PIZZAS_FAIL;
+  // Instead of using a public payload of any , we are acturally going to get a pizza array . Now before we import the type we'll just jump acrooss the db.json which has all pizzas information inside . The db.json is a fake server that just uses pure JSON when we make a request to it , it's going to return the data (即我们要依据 服务器传回的数据形式，来去设计我们的modle, 即 pizza.model.ts)
+  constructor ( public payload: Pizza[] ) {
+    
+  }
+}
+
+// In the end, what we now need to do is acturally export our  action types, these are simply used in our reducer , what we essentially need to do is export our own type called PizzasAction , we can then assign `action creators` to this
+// ----------3 action types
+
+export type PizzasAction = LoadPizzas | LoadPizzasFail | LoadPizzasSuccess;
+
+
 ```
 
+## course 8 Creating our first Reducer
+
+> we need have a reducer before any of actions can be responded to by our store 
+
+```bash
++-- app
++-- products/
+    +-- products.module.ts
+    +-- container/
+    +-- components/
+    +-- models/
+    +-- services/
+    +-- store/
+        +-- index.ts
+        +-- actions/
+            # where the action constants and our action creators are going to live 
+            +-- pizzas.action.ts
+        +-- reducers/
+            +-- pizzas.reducer.ts
+            +-- index.ts
+```
+
+1. pizzas.reducer.ts
+
+```ts
+import { Pizza } from './src/products/models/pizza.model.ts';
+
+//--- 0. import action file
+// we need import essentially all of our actions at once , we could do import load pizzas comma , load pizzas fail comma, what I like to do is use asterrisk that will import everything as what we can call that fromPizzas 
+import * as fromPizzas from './src/products/store/actions/pizzas.acton';
+
+// in ngrx we make massive(大量的) use of type checking , so let's go and make an interface , what we're going to call is the pizza state  , so this is defining a slice of state   that our reducer will manage   in our entire state tree 
+//--- 1. state slice interface 
+export interface PizzaState {
+  data: Pizza[];
+  loaded: boolean;
+  loading: boolean;
+}
 
 
+// Inside this file we nedd a few things , we'll start off with our application initial state
+//----2. initial state slice 
+export const initialState: PizzaState = {
+  data: [],
+  loaded: false,
+  loading: false
+};
+
+//---3. reducer function
+export function reducer(
+  state = initialState,
+  action: fromPizzas.PizzasAction
+):PizzaState {
+  // 此处是一个易迷糊点 action是 fromPizzas.PizzasAction 即 `action creator` 的一个实例, 每个实例都有一个type 属性；而 type 属性又指向  `action constants` 
+  switch(action.type) {
+    // return a new representation of the state . We are going to return a brand new object , Now what we want to return is merging all of the initial state in , so our return statement is now conforming to what we've told it to in our reducer . 
+    
+    //-1- In fact when we dispatch an event called LOAD_PIZZAS , we're essentially telling the application that we are loading , in the initial state we've setted loadding false , so in this case we just want just say loading is true ;
+    case fromPizzas.LOAD_PIZZAS: {
+      return {
+        ...state,
+        loading: true
+      }
+    }
+
+    //-2- In the LOAD_PIZZAS_SUCCESS case , we don't need to say that it loading ,so we're going to toggle that back to false . When the pizzas are loaded we want to acturally tell  our store that the state is now changed to load .  This allow us to contrl things like loading spinners , and when we come on to route guards we'll acturally be using this loaded preoperty to find out whether we loaded the pizzas , otherwise we're going to dispatch an action and make sure that those pizzas are loaded for us ;
+    case fromPizzas.LOAD_PIZZAS_SUCCESS: {
+      return {
+        ...state,
+        loading: false,
+        loaded: true
+      }
+    }
+
+    // in the LOAD_PIZZAS_FAIL situation , we're going to change loading property to false, and loaded property is also false , because on a fail we have definitely not loaded anything and this will eradicate(摧毁，连根拔起) any previous state 
+    case from Pizzas.LOAD_PIZZAS_FAIL: {
+      return {
+        ...state,
+        loading: false,
+        loaded: false
+      }
+    }
+
+  }
+
+  return state;
+}
 
 
+```
 
-
+2. store/index.ts
 
