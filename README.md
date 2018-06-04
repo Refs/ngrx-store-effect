@@ -1,5 +1,10 @@
 #  ngrx
 
+## 术语
+
+1. Creators : 类 ， 通过类我们可以去实例化（产生）一个对象；
+2. factory: 函数，可以根据不同的参数，去生成各种不同的东西；
+
 ## the course preknowledge
 
 1. Feature Modules: https://angular.io/guide/feature-modules
@@ -59,7 +64,7 @@
 
 ## Action constants and Creators (course 7)
 
-1. The first thing that our application needs and what we're gping to start with is this products component where we're going to dispatch an action saying that 'we want to lad the pizzas '. now when we acturally come to load the pizzas we're gping to use an introduce ngrx/effects . however that is kind of down the line what we first want to do is kind of understand the building blocks of the store . We are going to populate it with some static data and then we are going to convert that to using an effect where we can communicate with the outside world and then bring that data back to our store . then pass the data into the container component  
+1. The first thing that our application needs and what we're going to start with is this products component where we're going to dispatch an action saying that 'we want to lad the pizzas '. now when we acturally come to load the pizzas we're going to use ngrx/effects . however that is kind of down the line what we first want to do is kind of understand the building blocks of the store . We are going to populate it with some static data and then we are going to convert that to using an effect where we can communicate with the outside world and then bring that data back to our store. then pass the data into the container component  
 
 ```bash
 +-- app
@@ -70,7 +75,42 @@
     +-- models/
     +-- services/
     +-- store/
+        +-- index.ts
+        +-- actions/
+            # where the action constants and our action creators are going to live 
+            +-- pizzas.action.ts
+        +-- reducers/
+            +-- 
 ```
+
+2. pizzas.action.ts
+
+> When it comes to dealing with things like ngrx actions , it's a good ideal to think about the mental process(思维过程) as we go 
+
+* first import the Action , create a class to implement the interface. when we see the typescript defination file , we have export interface action and it has a type property pf string. (其余的意思是，暴露的Action 接口只有一个 type 属性，而我们在实际应用的时候，需要增加许多额外的属性，此时我们的做法是 新增一个接口，用来实现与拓展Action)
+
+```js 
+export interface Action {
+    type: string;
+}
+``` 
+
+```js
+import { Action } from '@ngrx/store';
+
+// Let 's define some new constants , because we talked about namespacing . What I'm going todo is call this [Products], so this acts as a kind of namespace you don't have todo it , because in this example we're not acturally going to load pizzas anywhere else in our application, but it's a good practise to namespace these as per the feature modules(使用 feature module 的名字 作为 nameSpacing name ) 
+// load pizzas
+export const LOAD_PIZZAS = '[Products] Load Pizzas';
+export const LOAD_PIZZAS_FAIL = '[Products] Load Pizzas Fail';
+export const LOAD_PIZZAS_SUCCESS = '[Products] Load Pizzas Success';
+
+// So we've defined the three things that can happed when we load the pizzas . First of all we want to dispatch an action called load the pizzas that's either going to fail or it's going to succeed . If it fails we can dispatch LOAD_PIZZAS_FAIL action ,when it's successful we can dispatch LOAD_PIZZAS_SUCCESS
+// we're communicating here kind of via events and  these events describe the steps of what is happending in our application and we can then respond to them accordingly . So you may have guessed the next step is that we want to acturally define some action creators (creators 指的就是类，通过这些类 我们可以去实例或action) 
+
+```
+
+
+
 
 
 
