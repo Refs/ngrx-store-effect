@@ -245,3 +245,24 @@ export function reducer(
 
 > The index.ts contains all of the reducers for the particular products feature module . Becasue we have a products module we're acturally going to export a new interface and we're gong to say this is the products state . 
 
+```ts
+import * as fromPizzas from './src/products/store/reducers/pizzas.reducer';
+
+import { ActionReducerMap } from '@ngrx/store';
+// we're acturally jumping up one level here , we're got a reducer that we've created, but we need to acturally make it part of the store .
+//--1-- the module state which is a slice of entire state tree 
+export interface ProductsState {
+  //So at this point we're defining the structure of our state tree, so in our ProductsState we're going have a slice of State call pizzas. The actrual interface for this is going to correspond PizzaState which in pizzas.reducer.ts 
+  pizzas: fromPizzas.PizzaState;
+  // We've now composed a new interface that uses another interface further down our state tree (state tree 是分层的，首先是顶层的，state 其次是 feature module 的 ProductsState 底层是 PizzasState , 此处我们在构建中间层的时候利用了底层的PizzaState)
+}
+
+//--2-- Register our reducers ActionReducerMap
+// On our reducers we know that slice of state is managed by a reucer function . The first of state is pizzas and consequently that is managed by the fromPizzas.reducer, so we're essentially taking our reducer function binding it to the pizzas . Now we can acturally type check this , so ngrx give us a small little utility which we can use so we can say import something called ActionReducerMap. The ActionReducerMap accept a generic type so what we can say is ProductsState . We're difinitely implementing the correct reducers based on the different levels of state .
+// the reducers is essentially describing what these reducers look like and how they are composed 
+
+export const reducers: ActionReducerMap<ProductsState> = {
+  pizzas: formPizzas.reducer,
+}
+
+```
