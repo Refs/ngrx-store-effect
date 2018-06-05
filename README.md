@@ -307,5 +307,4 @@ import { reducers } from './src/products/store';
 })
 export class ProductsModule {}
 
-
 ```
