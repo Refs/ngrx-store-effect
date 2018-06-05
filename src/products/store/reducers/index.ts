@@ -8,7 +8,6 @@ export interface ProductsState {
 }
 
 // register reducer
-
 export const reducers: ActionReducerMap<ProductsState> = {
   pizzas: fromPizzas.reducer,
 }

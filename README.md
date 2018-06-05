@@ -171,6 +171,8 @@ export type PizzasAction = LoadPizzas | LoadPizzasFail | LoadPizzasSuccess;
         +-- reducers/
             +-- pizzas.reducer.ts
             +-- index.ts
+        +-- index.ts
+    +-- products.module.ts
 ```
 
 1. pizzas.reducer.ts
@@ -241,7 +243,7 @@ export function reducer(
 
 ```
 
-2. store/index.ts
+2. store/reducers/index.ts
 
 > The index.ts contains all of the reducers for the particular products feature module . Becasue we have a products module we're acturally going to export a new interface and we're gong to say this is the products state . 
 
@@ -264,5 +266,46 @@ export interface ProductsState {
 export const reducers: ActionReducerMap<ProductsState> = {
   pizzas: formPizzas.reducer,
 }
+
+```
+3. store/index.ts 
+> 生成这个文件的原因见下
+
+```ts
+// to pass up what we just crated , so we are inside our reducers folder we have a index.ts(reducers/index.ts) , we can essentially access the reducers: ActionReducerMap
+
+// we need to do this because this is boilerplate with setting up our store piece-by-piece(一个接一个,一片一片的)
+export * from './src/products/store/reducers'
+
+// 目的是 pass the reducers up one directore so er can access it in products.module.ts 
+
+```
+
+4. products.module.ts
+
+```ts
+
+//import the StoreModules, because our products module has no idea that ngrx store exists at this point or that we want to start creating our own data structures
+// It's up to us at this point to go and register this module  
+import { StoreModule } from '@ngrx/store';
+
+// 
+import { reducers } from './src/products/store';
+
+//----
+@NgModule({
+  import: [
+    //-----
+    // forFeature allows us to essentially lazy load everything to do with our store and it will bind itself to the root store object , so we"ve just got one object and when we lazy load a module , such as the ProductsModule itself which is completely lazy loaded.
+    // Once we use the foFeature this will essentially attach itself to our root store (app.module.ts---  StoreModule.forRoot({}, { metaReducers }),)
+    // When our products module loads ，we then bind StoreModule.forFeature() to that root object . So that's what is happending that's the idea behind it .
+    // The forFeature method accepts an argument , we need to say that it's going to the 'products' and we can then pass an empty object as the second argument . The empty object is acturally going to be our reducers so inside the /products/store/ folder waht we need to do again is acturally export evertthing inside of here. That is why we created this products/store/index.ts 暴露整个sore 的所有东西；
+    
+    // our reducers are now registered with our feature store module 
+    StoreModule.forFeature('products', reducers)
+  ]
+})
+export class ProductsModule {}
+
 
 ```
