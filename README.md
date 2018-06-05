@@ -31,7 +31,7 @@ export interface Topping {
 
 
 
-## ngrx store overview (course 5)
+## ngrx store overview (c 5)
 
 1. change detection and the performance benefits that we get from using a single store or rather an observable approach to managing state in our applications . 
 
@@ -50,7 +50,7 @@ export interface Topping {
 * a feature module delivers a cohesive set of functionality focused on a specific application need such as a user workflow, routing, or forms. 
 
 
-## Reactive Component Architecture  (course 6)
+## Reactive Component Architecture  (c 6)
 
 1. reactive angular: what is reactive angular in the sense of a component architecture . There are couple of principles that we can use as a guideline when we come to building our angular component tree
 * container component : which you see in our our project we have the containers fold and everything which we consider a presentational component just sits in a generic conponent folder 
@@ -72,7 +72,7 @@ export interface Topping {
 
 3. To get data into a container we use a select, to get data into a presentational component we use @input, to get data out of the presentational component we use an @output , to get data back to the store back to the reducer or effect we then use a store dispatch . Above is the data flow and how things communicate 
 
-## Action constants and Creators (course 7)
+## Action constants and Creators (c 7)
 
 1. The first thing that our application needs and what we're going to start with is this products component where we're going to dispatch an action saying that 'we want to lad the pizzas '. now when we acturally come to load the pizzas we're going to use ngrx/effects . however that is kind of down the line what we first want to do is kind of understand the building blocks of the store . We are going to populate it with some static data and then we are going to convert that to using an effect where we can communicate with the outside world and then bring that data back to our store. then pass the data into the container component  
 
@@ -151,7 +151,7 @@ export type PizzasAction = LoadPizzas | LoadPizzasFail | LoadPizzasSuccess;
 
 ```
 
-## course 8 Creating our first Reducer
+## c 8 Creating our first Reducer
 
 > we need have a reducer before any of actions can be responded to by our store 
 
@@ -309,7 +309,7 @@ export class ProductsModule {}
 
 ```
 
-## course 9 Store Selectors
+## c 9 Store Selectors
 
 ```ts
 // in pizzas.reducer.ts
