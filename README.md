@@ -308,3 +308,133 @@ import { reducers } from './src/products/store';
 export class ProductsModule {}
 
 ```
+
+## course 9 Store Selectors
+
+```ts
+// in pizzas.reducer.ts
+export const initialState: PizzaState = {
+  data: [],
+  loaded: false,
+  loading: false
+};
+```
+
+Now what we acturally want to do is somehow display one particular property(data) which will be our array of pizzas  in the actural angular application , so the way we do this is through something  called a selector .
+ 
+Now before we get started what we're going to do is acturally populate this initial state with some values . we're going to jump into the db.json and we're going to take any pizza you can just select any one that you want . Now we can copy that whole object , now waht we're going to do is just paste it for now inside of the data property. So we're providing some initial stae to our pizzas so we're going to end up with one pizza . once we've finalized creating a selector which allows us to select this particular slice of state.
+
+```ts
+// in pizzas.reducer.ts
+export const initialState: PizzaState = {
+  data: [
+       {
+      "name": "Blazin' Inferno",
+      "toppings": [
+        {
+          "id": 10,
+          "name": "pepperoni"
+        },
+        {
+          "id": 9,
+          "name": "pepper"
+        },
+        {
+          "id": 3,
+          "name": "basil"
+        },
+        {
+          "id": 4,
+          "name": "chili"
+        },
+        {
+          "id": 7,
+          "name": "olive"
+        },
+        {
+          "id": 2,
+          "name": "bacon"
+        }
+      ],
+      "id": 1
+    },
+    {
+      "name": "Seaside Surfin'",
+      "toppings": [
+        {
+          "id": 6,
+          "name": "mushroom"
+        },
+        {
+          "id": 7,
+          "name": "olive"
+        },
+        {
+          "id": 2,
+          "name": "bacon"
+        },
+        {
+          "id": 3,
+          "name": "basil"
+        },
+        {
+          "id": 1,
+          "name": "anchovy"
+        },
+        {
+          "id": 8,
+          "name": "onion"
+        },
+        {
+          "id": 9,
+          "name": "pepper"
+        },
+        {
+          "id": 5,
+          "name": "mozzarella"
+        }
+      ],
+      "id": 2
+    },
+    {
+      "name": "Plain Ol' Pepperoni",
+      "toppings": [
+        {
+          "id": 10,
+          "name": "pepperoni"
+        }
+      ],
+      "id": 3
+    }
+  ],
+  loaded: false,
+  loading: false
+};
+```
+
+
+What we acturally want to do before any of that is set up our container conponent to accept the store.   
+
+```ts
+//--1 import store
+import { Store } from '@ngrx/store'
+
+
+// products/containers/products.component.ts
+export class ProductsComponent implements OnInit {
+  pizzas: Pizza[];
+
+  // at the moment(此刻) we're just using the PizzasService , so we're gong to completely eradicate anything to do with services, we don't need the service. 
+  // constructor(private pizzaService: PizzasService) {}
+  constructor() {}
+
+  // So what I'm going to do is just simply inside of the ngOnInit, and I'm going to delete delete everything in it 
+  // ngOnInit() {
+  //   this.pizzaService.getPizzas().subscribe(pizzas => {
+  //     this.pizzas = pizzas;
+  //   });
+  // }
+  ngOnInit() {
+  }
+}
+```

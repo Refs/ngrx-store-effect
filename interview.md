@@ -26,10 +26,16 @@
 
 ### 大恒光伏智能管理平台
 
+a backend web application rendering the data from mysql, using the Api of java , basing on bootstap.js, jquery.js, echart.js, etc.  
+
+
 ### 大恒光伏数据可视化平台
+
+a data view platform rendering the data from API in the real time , basing on require.js, etc.
 
 ## 开源项目 
 
 ### node_restful_api
 
 
+基于 angular @ngrx 
