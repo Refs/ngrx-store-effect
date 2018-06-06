@@ -415,5 +415,20 @@ export const reducers: ActionReducerMap<ProductsState> = {
 * selector is essentially a function where we can compose different levels of state and we can return a new piece of State
 * Let's create our first selector which will allow us to render the 'data' in to our angular application.
 
+```ts
+// products/store/reducers/pizzas.reducer.ts
+
+// what we can do is to export a function which allows ngrx is essentially access PizzaState property without us needing to repeat ourselves over and over again .
+// so selecttor is somthing you use to compose state state and then we actually use the selector alongside store.select() in our components 
+export interface PizzaState {
+  data: Pizza[];
+  loaded: boolean;
+  loading: boolean;
+}
+
+// function which accept state that type of PizzaState  
+
+```
+
 
 
