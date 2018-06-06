@@ -509,8 +509,18 @@ export const getPizzasLoading = createSelector(
 3. conclusion  --- explaining 
 
 ```ts
+//1. let's assume we have a Javascript object and we have products object . 
 const state = {
+  // 2. Inside the products we've defined that we're going to have some level of pizzas , 
   products: {
+    //3. **now our pizza reducer acturally manages this slice of state*** , which has the data, loaded, loading property 
+    //4. this is essentially our entire ngrx store state tree .** We creat products as a feature module, so when our products feature module is loaded . ngrx store can add ``products: {....}```dynamically and the reducers(store/indext.ts) dynamically to our state tree . 
+    // 5. When the reducers are added to the state tree ,we've got one reducer  called pizzas inside  , and we bing our pizzas reducer to it . inside pizzas{..} we have data , loaded , loading 
+    // 6. So we're essentially stepping through the state tree by using selector functions 
+    // 7. We're first getProductsState(reducers/index.ts) , which is essentially getting a reference to products:{...}
+    // 8. getAllPizzas is reference to pizzas:{...} etc.
+
+
     pizzas: {
       data: [],
       loaded: false,
@@ -519,6 +529,7 @@ const state = {
   }
 }
 ```
+
 
 
 
