@@ -416,25 +416,56 @@ export const initialState: PizzaState = {
 What we acturally want to do before any of that is set up our container conponent to accept the store.   
 
 ```ts
-//--1 import store
-import { Store } from '@ngrx/store'
+// products/containers/products/products.component.ts
 
+//--1 import store
+import { Store } from '@ngrx/store';
+//--2 import Observable type checking
+import { Observable } from 'rxjs/Observable';
+//--3 import anything from store
+import * as fromStore from './src/products/store';
 
 // products/containers/products.component.ts
 export class ProductsComponent implements OnInit {
   pizzas: Pizza[];
 
-  // at the moment(此刻) we're just using the PizzasService , so we're gong to completely eradicate anything to do with services, we don't need the service. 
-  // constructor(private pizzaService: PizzasService) {}
-  constructor() {}
+  //--4-inject store-- What we acturally want tosso is allow us to pass the ProductsState, so we can acturally type check this inside of a component 
+  // 依赖注入 Store : inside the constructor we can say private store is going to be of type Store which accept a generic type as well( because store is an observable of state and an observer of actions, so the same as Observable we should specify a generic type) .
+  // we can specify fromStore.ProductsState, that mean we can access that ProductsState. So this is type checking that anything that we access inside of here alongside of our ProductsState . 
+  //That means that we can only select things from the store that correspond or exist in the ProductsState 
+  constructor(privite store: Store<fromStore.ProductsState>) {}
 
-  // So what I'm going to do is just simply inside of the ngOnInit, and I'm going to delete delete everything in it 
-  // ngOnInit() {
-  //   this.pizzaService.getPizzas().subscribe(pizzas => {
-  //     this.pizzas = pizzas;
-  //   });
-  // }
+  // how we can obtain properties from our store ? we can use the store.select() method 
   ngOnInit() {
+    // we can pass in either a string or or we can pass in a function , if we pass in a function , it will return us a lice of state . 
+    // For this I'm going to do is just say select me the 'products'. now we're doing this because we have a slice of state 
+    // what we need do is essentially create a selector with the top=level property of 'products', so that we could jump a level down into our data structure to be able to access defferent properties  (select 中所传递的 'product' 实际上是 selector的一个 property ) ('products' 实际上是和 /products.module.ts 中的  StoreModule.forFeature('products',reducers) 这条代码相对应的)
+    //'
+    this.store.select<any>('products').subscribe(
+      state => {
+        console.log(state);
+      }
+    )
   }
 }
 ```
+********** 打印结果
+
+![](./images/store_select.jpg)
+
+```ts
+// store/index.ts
+export interface ProductsState {
+  pizzas: fromPizzas.PizzaState,
+}
+
+export const reducers: ActionReducerMap<ProductsState> = {
+  pizzas: fromPizzas.reducer,
+}
+
+// we just created a pizza reducers and we call that the pizzas . The pizza reducer then manages a small selection of state which have the data , the loaded, the loading property ;
+// the store.select() method give us the state for the particular module which in our case is the products module and when we registered our store we said StoreModule.forFeature('products',reducers)
+
+// we passed in that string which says products , so that's why we've asked in the select method for a property called 'products'
+```
+
