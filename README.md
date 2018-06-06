@@ -426,9 +426,37 @@ export interface PizzaState {
   loading: boolean;
 }
 
-// function which accept state that type of PizzaState  
+// function which accept state that type of PizzaState  , so this is the piece of state that were given to us and it's going to be of type PizzaState
+export const getPizzasLoading = (state: PizzaState) => state.loading;
+export const getPizzasLoaded = (state: PizzaState) => state.loaded;
+export const getPizzasLoading = (state: PizzaState) => state.data;
+// these are small functions that get passed the small level of the pizza state and at that point in time we are down in our data structure . So this is a goog practice, put these undernearth your reducers.
+// Now we can compose things one level up and acturally pass this into what we call a create selector function (in reducers/index.ts)
 
 ```
+
+* to create the base level of our state object .
+
+```ts
+// reducers/index.ts
+
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+
+// this is going to be a constant which holds a selector for our entire lazy loaded module . Now to create a selector waht we need to do is to import createFeatureSelector method , and pass in a string called 'products';
+// where this 'products' come frome? this was acturally when we register our module StoreModule.forFeature('products',reducers) . this particular feature starts with an object property called products ,so anything in this feature module is relied on a property called 'products '
+
+// so below code is creating a base reference to that 'products property' on our state . Because we have typescript here  what we can actually do is pass in the ProductState as the generic type ;
+
+export const getProductsState = createFeatureSelector<ProductState>('products');
+
+// To get this working in our component we acturally need another selector to essentially compose our product state , so we take the top level products and we'll 
+
+// pizzas state
+// to export another const , what this is going to do is return us the products.pizzas . So we're going from from the top and  down from products , then we're selecting that pizzas piece of State. Now we can do this by using the createSeletor, instead of the createFeatureSelector
+// to import the createSelector function , then we can pass in other selectors or we can pass in the functions we just created in products/store/reducers/pizzas.reducer.ts , which then we can pass to a component to select that slice of data all the way down the state tree 
+
+```
+
 
 
 
