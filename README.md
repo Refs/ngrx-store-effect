@@ -427,9 +427,9 @@ export interface PizzaState {
 }
 
 // function which accept state that type of PizzaState  , so this is the piece of state that were given to us and it's going to be of type PizzaState
-export const getPizzasLoading = (state: PizzaState) => state.loading;
+export const getPizzas = (state: PizzaState) => state.data;
 export const getPizzasLoaded = (state: PizzaState) => state.loaded;
-export const getPizzasLoading = (state: PizzaState) => state.data;
+export const getPizzasLoading = (state: PizzaState) => state.loading;
 // these are small functions that get passed the small level of the pizza state and at that point in time we are down in our data structure . So this is a goog practice, put these undernearth your reducers.
 // Now we can compose things one level up and acturally pass this into what we call a create selector function (in reducers/index.ts)
 
@@ -443,9 +443,10 @@ export const getPizzasLoading = (state: PizzaState) => state.data;
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 
 // this is going to be a constant which holds a selector for our entire lazy loaded module . Now to create a selector waht we need to do is to import createFeatureSelector method , and pass in a string called 'products';
-// where this 'products' come frome? this was acturally when we register our module StoreModule.forFeature('products',reducers) . this particular feature starts with an object property called products ,so anything in this feature module is relied on a property called 'products '
+// where this 'products' come frome? this was acturally when we register our module StoreModule.forFeature('products',reducers) . this particular feature starts with an object property called products ,so anything in this feature module is relied on a property called 'products'
 
 // so below code is creating a base reference to that 'products property' on our state . Because we have typescript here  what we can actually do is pass in the ProductState as the generic type ;
+
 
 export const getProductsState = createFeatureSelector<ProductState>('products');
 
@@ -455,8 +456,69 @@ export const getProductsState = createFeatureSelector<ProductState>('products');
 // to export another const , what this is going to do is return us the products.pizzas . So we're going from from the top and  down from products , then we're selecting that pizzas piece of State. Now we can do this by using the createSeletor, instead of the createFeatureSelector
 // to import the createSelector function , then we can pass in other selectors or we can pass in the functions we just created in products/store/reducers/pizzas.reducer.ts , which then we can pass to a component to select that slice of data all the way down the state tree 
 
+// To use create selector is how we compose our application state . so how do we get the pizza state what we want to do is just create at the moment of reference to the next step down the state tree . 
+
+export const getPizzaState = createSelector(
+  // --- at this point we acturally have getPizzaState which is going to pass in the ProductsState 
+  getProductState,
+  
+  (state: ProductsState) => {
+    state.pizzas
+  }
+);
+
 ```
 
+* Then we're acturally going to return state state.pizzas, essentially what we're saying is 'give me the products!. okay! here is the products. now give me the pizzas! ' 
+
+```ts
+// reducers/index.ts
+
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+
+import * as fromPizzas from './pizzas.reducer';
+
+// 获取相对于 feature module 的root state;
+export const getProductsState = createFeatureSelector<ProductState>('products');
+
+export const getPizzaState = createSelector(
+  getProductState,
+  (state: ProductsState) => {
+    state.pizzas
+  }
+);
+
+export const getAllPizzas = createSelector(
+  // because we want to actually jump straight down the state tree , we can pass in getPizzaState as the argument , next callback function will be fromPizzas.getPizzas
+  getPizzaState,
+  fromPizzas.getPizzas
+);
+
+export const getPizzasLoaded = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasloaded,
+)
+
+export const getPizzasLoading = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasloading,
+)
+
+```
+
+3. conclusion  --- explaining 
+
+```ts
+const state = {
+  products: {
+    pizzas: {
+      data: [],
+      loaded: false,
+      loading: false
+    }
+  }
+}
+```
 
 
 
