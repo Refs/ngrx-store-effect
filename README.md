@@ -5,6 +5,7 @@
 1. Creators : 类 ， 通过类我们可以去实例化（产生）一个对象；
 2. factory: 函数，可以根据不同的参数，去生成各种不同的东西；
 3. indexable Types https://www.typescriptlang.org/docs/handbook/interfaces.html#indexable-types
+
 ```ts
 // topping.model.ts
 export interface Topping {
@@ -12,6 +13,21 @@ export interface Topping {
   name?: string;
   [key: string]: any;
 }
+
+```
+
+4. register: always specific to module register. after a module registered in a root module or feature module, we can inject service in component of feature or root module ;
+
+```ts
+@NgModule({
+  imports: [
+    StoreModule.forFeature('products',reducers)
+  ],
+  providers: [],
+  declarations: [],
+  exports: [],
+})
+export class ProductsModule {}
 
 ```
 
@@ -311,6 +327,8 @@ export class ProductsModule {}
 
 ## c 9 Store Selectors
 
+1. register our storeModule and use Store in the component 
+
 ```ts
 // in pizzas.reducer.ts
 export const initialState: PizzaState = {
@@ -327,86 +345,7 @@ Now before we get started what we're going to do is acturally populate this init
 ```ts
 // in pizzas.reducer.ts
 export const initialState: PizzaState = {
-  data: [
-       {
-      "name": "Blazin' Inferno",
-      "toppings": [
-        {
-          "id": 10,
-          "name": "pepperoni"
-        },
-        {
-          "id": 9,
-          "name": "pepper"
-        },
-        {
-          "id": 3,
-          "name": "basil"
-        },
-        {
-          "id": 4,
-          "name": "chili"
-        },
-        {
-          "id": 7,
-          "name": "olive"
-        },
-        {
-          "id": 2,
-          "name": "bacon"
-        }
-      ],
-      "id": 1
-    },
-    {
-      "name": "Seaside Surfin'",
-      "toppings": [
-        {
-          "id": 6,
-          "name": "mushroom"
-        },
-        {
-          "id": 7,
-          "name": "olive"
-        },
-        {
-          "id": 2,
-          "name": "bacon"
-        },
-        {
-          "id": 3,
-          "name": "basil"
-        },
-        {
-          "id": 1,
-          "name": "anchovy"
-        },
-        {
-          "id": 8,
-          "name": "onion"
-        },
-        {
-          "id": 9,
-          "name": "pepper"
-        },
-        {
-          "id": 5,
-          "name": "mozzarella"
-        }
-      ],
-      "id": 2
-    },
-    {
-      "name": "Plain Ol' Pepperoni",
-      "toppings": [
-        {
-          "id": 10,
-          "name": "pepperoni"
-        }
-      ],
-      "id": 3
-    }
-  ],
+  
   loaded: false,
   loading: false
 };
@@ -440,7 +379,6 @@ export class ProductsComponent implements OnInit {
     // we can pass in either a string or or we can pass in a function , if we pass in a function , it will return us a lice of state . 
     // For this I'm going to do is just say select me the 'products'. now we're doing this because we have a slice of state 
     // what we need do is essentially create a selector with the top=level property of 'products', so that we could jump a level down into our data structure to be able to access defferent properties  (select 中所传递的 'product' 实际上是 selector的一个 property ) ('products' 实际上是和 /products.module.ts 中的  StoreModule.forFeature('products',reducers) 这条代码相对应的)
-    //'
     this.store.select<any>('products').subscribe(
       state => {
         console.log(state);
@@ -468,4 +406,14 @@ export const reducers: ActionReducerMap<ProductsState> = {
 
 // we passed in that string which says products , so that's why we've asked in the select method for a property called 'products'
 ```
+
+2. selector 
+
+![](./images/state_data.jpg)
+
+* how do we get the data property of state in to component For the above we need something called selector. 
+* selector is essentially a function where we can compose different levels of state and we can return a new piece of State
+* Let's create our first selector which will allow us to render the 'data' in to our angular application.
+
+
 

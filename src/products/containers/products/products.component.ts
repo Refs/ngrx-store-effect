@@ -1,7 +1,17 @@
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 
 import { Pizza } from '../../models/pizza.model';
-import { PizzasService } from '../../services/pizzas.service';
+// import { PizzasService } from '../../services/pizzas.service';
+// import the store
+import { Store } from '@ngrx/store';
+// import Onservable type checking
+import { Observable } from 'rxjs/Observable';
+// import the store
+import * as fromStore from '../../store';
+
+
+
+
 
 @Component({
   selector: 'products',
@@ -30,11 +40,15 @@ import { PizzasService } from '../../services/pizzas.service';
 export class ProductsComponent implements OnInit {
   pizzas: Pizza[];
 
-  constructor(private pizzaService: PizzasService) {}
+  // constructor(private pizzaService: PizzasService) {}
+  constructor(private store: Store<fromStore.ProductsState>) {
+  }
 
   ngOnInit() {
-    this.pizzaService.getPizzas().subscribe(pizzas => {
-      this.pizzas = pizzas;
-    });
+    this.store.select<any>('products').subscribe(
+      state => {
+        console.log(state);
+      }
+    )
   }
 }
