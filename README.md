@@ -635,6 +635,222 @@ export class ProductsComponent implements OnInit {
 
 ```
 
+## c10 @Effect and Concept 
+
+1. What is ngrx/effects?
+
+Essentially it's a side effects model for ngrx store . This is means that we can perform various side effects which we'll come on to momentarily outside of the ngrx store package . 
+
+2. the using of ngrx effects?
+
+* Listen for ngrx/store actions
+
+* Isolate side effects from components
+
+* Communicate outside of Angular
+
+This is really nice , because for instance we had some kind of load event , we want to load something in our application . We could do this inside a reducer, but this would actually be creating an asynchronous request inside something that's considered a pure function(reducer is a pure function).
+
+So immediately those type of things are kind of the wrong approach , so we want to take the rigth approach with a side effects model that's built for the technology we're using . 
+
+So importantly we can dispatch some kind of LOAD event and we can actually listen to this action inside the effect . 
+
+We can then communicate outside of angular , then using something like angular's HTTP  package or for Instance something like a Websocket where it's outside of the angular ecosystem we're dealing with  , outside of the angular world .
+
+So we can communicate outside of angular and as a result we're isolating  those side effects away from our component and this can be something as simple as routing.
+
+typically we would do sime routing and we inject angular's Router into a component , we'd listen to a callback in a service then we'd redirect away . however 
+
+3. The Effects flow 
+
+![](./images/effect_flow.jpg)
+
+Let's introduce effects , you can think of effects as a outside of the store which it's just a mechanism that we can use to go and fetch data so then put back in our store. So we're essentially jumping out of the store momentarily(立即) and then bringing something back . 
+
+In fact we can listen to store actions ,so this is what would happen when we use in effect . We can set up effect to say 'ok! I'm actrully interested in this LOAD action as well', and it may be that our reducer is also interested in the same action(所以途中的action 分成了两条线);
+
+The difference is the reducer is a pure function, it is sychonous, and nothing is happening inside of there apart from(adv:除了...之外) taking data and merging it as a new state however .
+
+However when we deal with an effect we can actually use somthing like a service or a WebSocket to go off to the server. So at this point our effet can say 'ok! angular service we want to do something outside of this store'. So it's time at this point where we can continue the journey and we can say 'ok! we've hot the server '. At this point we can say 'ok! give me some particular JSON ' . 
+
+Once we got the data that's come back from the server we then get this as an observable inside of our service . We get an observable of response . So what wan can do  is essentially plug in our service to an effect which is an observable stream . 
+
+In our case waht we will have is a service that returns an observable and an effect which is an observable stream . We can then map over thing and we want to acturally get the data back inside the reducer at this point . 
+
+When something as asynchronous is completely we want to then back to the reducer . So the question is how at this point do we get something back into the reducer . 
+
+*our effect is kind of outside of the store* . It's in control of something else , so we want to dispatch an action from our effect .
+
+Let's assume that our first action dispatched a "Load". It's might be that the effect listens to the 'LOAD' event and grabs our service and says 'ok! go and fetch me all of this data '
+
+We bring back the data and inside the effet we can then dispatch a 'SUCCESS' action which means that automatically we can listen to that in our reducer and we get  the response as the the 'action.payload'. 
+
+So it's just a nice.  Outside of the store we can make a synchronous request , we can bring it back and dispatch a new action , such as 'SUCCESS' and we brought back to the reducer and then we have the whole lifecycle trip where we merge new state and then it comes back and renders to the component 
+
+The we can start the journey all over again if our component dispatched a new action and we could listen something in the reducer , we can listen to something in the effect , we can make a synchronous request and bing back to our store which is our centralized location and single source of truth      
+
+## c 11 Creating an @Effect 
+
+```bash
++-- app
++-- products/
+    +-- products.module.ts
+    +-- container/
+    +-- components/
+    +-- models/
+    +-- services/
+    +-- store/
+        +-- index.ts
+        +-- actions/
+            +-- pizzas.action.ts
+            +-- index.ts
+        +-- reducers/
+            +-- pizzas.reducer.ts
+            +-- index.ts
+        +-- index.ts
+    +-- products.module.ts
+
+```
+
+1. actions/index.ts 
+> At the moment we have the 'fromStore' and what we need to do is now pass our actions up to our components . so we can asscess them via the 'fromStore' alias . we just need to create a index.ts in the actions folder
+
+```ts
+// store/actions/index.ts
+export * from './pizzas.action';
+
+```
+
+```ts
+// store/index.ts
+export * from './reducers';
+export * from './actions';
+
+```
+
+
+
+2. dispatch our first action in products.component.ts
+
+```ts
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Pizza } from '../../models/pizza.model';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
+import * as fromStore from '../../store';
+
+@Component({
+  selector: 'products',
+  styleUrls: ['products.component.scss'],
+  template: `
+    <div class="products">
+      <div class="products__new">
+        <a
+          class="btn btn__ok"
+          routerLink="./new">
+          New Pizza
+        </a>
+      </div>
+      <div class="products__list">
+        <div *ngIf="!((pizzas$ | async )?.length)">
+          No pizzas, add one to get started.
+        </div>
+        <pizza-item
+          *ngFor="let pizza of (pizzas$ | async )"
+          [pizza]="pizza">
+        </pizza-item>
+      </div>
+    </div>
+  `,
+})
+export class ProductsComponent implements OnInit {
+  pizzas$: Observable<Pizza[]>;
+  constructor(private store: Store<fromStore.ProductsState>) {
+  }
+
+  ngOnInit() {
+    // we're actually just using the initial state from the reducer , but it might be a good idea to actually introduce where we can dispatch an action to call our firt 'LOAD' event ;
+    this.pizzas$ = this.store.select(fromStore.getAllPizzas)
+
+    // To create our first action 'LOAD PIZZAS' , and at the moment in our reducer function we have already are listening to this 'LOAD PIZZAs'. So at this point in time the store has  called the reducer and we are returning the new state , say 'loading is true ';() 也就是说 组件 dispatch action 之后，这个action 不会想自己以前想的那样，会被effect 拦截。 而是会直接传到 reducer中去， 并返回一个新的 state)
+
+    // we are waiting for 'LOAD_PIZZAS_SUCCESS', and this is where @ngrx/effects comes into play , we want to set up an effect to listen to our 'LOAD_PIZZAS' action, and it's going to make the request using one of our services , and then we're going to dispatch 'LOAD_PIZZAS_SUCCESS' from the effect , where we will be able to obtain the new state;
+
+    this.store.dispatch(new fromStore.LoadPizzas());
+  }
+}
+
+
+```
+
+3. create pizzas.action.ts
+
+```bash
+
++-- app
++-- products/
+    +-- products.module.ts
+    +-- container/
+    +-- components/
+    +-- models/
+    +-- services/
+    +-- store/
+        +-- index.ts
+        +-- actions/
+            +-- pizzas.action.ts
+            +-- index.ts
+        +-- effects
+            +-- pizzas.effect.ts
+        +-- reducers/
+            +-- pizzas.reducer.ts
+            +-- index.ts
+        +-- index.ts
+    +-- products.module.ts
+
+```
+
+```ts
+// pizzas.action.ts
+
+// Inside with this file , I will roll with the effect is to actually listen for that load pizzas action and then we're going to produce a different side effect.
+// The side effect of this case is we're acturally communication via HTTP to our local server and then we're going to bring that information back and then we're going to dispatch a new action saying that the request was successful .
+
+
+import { Injectable } from '@angular/core';
+
+// Actions is an observable ,we can then listen to the types of Actions that are being dispatched and respond to them accordingly 
+import { Effect, Actions } from '@ngrx/effects';
+
+// import actions
+import * as pizzaActions from './actions/pizzas.action';
+
+@Injectable()
+export class PizzasEffects {
+  // effect is essenctially a class which contains a few properties which happen to be observables. now our observables get called by ngrx effects and kind of in a way act like a reducer so it allow us to reponse to different events  and do different things 
+  // Now the role of reducer is to actually deal with pure javascript state and immutabe objects . In this case we're going to listening to some events that are acturally dispatched ,however we're dealing with observable streams and in our case we're using the pizza service to fetch some pizzas and then dispatch a new success action when they come back from server .
+
+  // Actions is an observable 
+  constructor(private action$: Actions) {}
+  
+  // create property called loadPizzas$ which is going to be an observable 
+  // we can actually say that we want to listen an action of the  specific type 
+  // *because in our component we have just dispatched that 'LOAD_PIZZAS'*, so  we just will listen to the 'LOAD_PIZZAS' action. 
+  //*********************************************************************
+  // This is where we want to perform a side effect . This is an observable stream and we can add observables to it we can return new observables and interestingly enough angular's HTTP client module returns an observable which means it fits directly into an effect .(因为 HTTP 模块也是返回 一个observable, 所以我们可以将 HTPP 模块 加到observable 流里面， 然后返回一个新的 observable), 这个逻辑 就类似于 promise chain 一样，一样的，无非是换了一种形式而已， 此处也是神技了 执行异步的神技）
+  //*******************************************
+
+  // This effects when the loadPizzas$ is executed we need to return an action and that is the key to understanding what an effect does. It doesn't do much more than what we're actually  looking at , we just need to mark it as an effect using @Effect() decorator and then dispatch a new action back 
+  @Effect()
+  loadPizzas$ = this.actions$
+              .ofType( pizzaActions.LOAD_PIZZAS )
+              // the pipe doesn't really do much itself but we can pass other operators go inside the pipe and this just simply contains a stream of pure functions instead of chaining them with the prototype ooperators so this 
+              .pipe()
+
+}
+
+```
+
+
 
 
 
