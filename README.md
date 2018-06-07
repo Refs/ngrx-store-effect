@@ -530,6 +530,110 @@ const state = {
 }
 ```
 
+The whole point of a selector is allow us to essentially separate our application state with our component trees , and we can compose our application state and then simply pass the slice we need to the particular component . 
+
+so in our case when we have the products component we want to essentially get all of the pizzas . 
+
+instead of passing in a string (`this.store.select<any>('products').subscribe`) , because we would have to manually go down from products and then we'd have to go to pizzas and then we'd have to go dwon into data and acturally do this every single time. So we can compose these selectors and we  can simply say :`this.store.select<any>(fromStore.getAllPizzas).subscribe`. So we're just going to ask for all of the pizzas. Now because we're doing this we can get rid of the generic type `this.store.select(fromStore.getAllPizzas).subscribe` 
+
+```ts
+// products/containers/products/products.component.ts
+
+export class ProductsComponent implements OnInit {
+  pizzas: Pizza[];
+
+  constructor(private store: Store<fromStore.ProductsState>) {
+  }
+
+  ngOnInit() {
+    // this.store.select<any>('products').subscribe(
+    //   state => {
+    //     console.log(state);
+    //   }
+    // )
+    // instead of passing in a string , because we would have to manually go down from products and then we'd have to go to pizzas 
+
+    this.store.select(fromStore.getAllPizzas).subscribe(
+      state =>{
+        console.log(state);
+      }
+    )
+  }
+}
+
+```
+
+At this point we have successfully written a few selectors to allow us to jump dwon our state tree and just using a single function . we can traverse the state tree and get given back the data that we asked for ;
+
+The interesting is the store.select() acturally returns and observable which we know , because we are now subscribing to it . However with angular we have the asynch pipe where we can pass the observable straight to our template . So let's go back amd implement the asynch pipe and we should see our pizza being rendered out in the dom ; 
+
+***************The sense of using selector ****************************
+> The purpose of using selector is to get the specific slice data  of state, which is a observable stream , then we can straightly pass the observable stream in the impure async pipe. then render the data in the component template.
+
+> what this will do is take that observable which is given to us from store , The store will then call the select function ,then composed our selectors for us , then return sigle slice of state that we're asking for . we then bind the data to the pizzas$, then we subscribe with the async pipe 
+*********************************** 
+
+```ts
+// products/containers/products/products.component.ts
+
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Pizza } from '../../models/pizza.model';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
+import * as fromStore from '../../store';
+
+@Component({
+  selector: 'products',
+  styleUrls: ['products.component.scss'],
+  template: `
+    <div class="products">
+      <div class="products__new">
+        <a
+          class="btn btn__ok"
+          routerLink="./new">
+          New Pizza
+        </a>
+      </div>
+      <div class="products__list">
+        <!- using the async pipe to subscribe the pizzas& observable->
+        <div *ngIf="!((pizzas | async)?.length)">
+          No pizzas, add one to get started.
+        </div>
+        <pizza-item
+          *ngFor="let pizza of (pizzas | async)"
+          [pizza]="pizza">
+        </pizza-item>
+      </div>
+    </div>
+  `,
+})
+export class ProductsComponent implements OnInit {
+  // pizzas: Pizza[];
+  pizzas$: Observable<Pizza[]>;
+
+  constructor(private store: Store<fromStore.ProductsState>) {
+  }
+
+  ngOnInit() {
+    // this.store.select<any>('products').subscribe(
+    //   state => {
+    //     console.log(state);
+    //   }
+    // )
+    // instead of passing in a string , because we would have to manually go down from products and then we'd have to go to pizzas 
+
+    this.store.select(fromStore.getAllPizzas).subscribe(
+      state =>{
+        // console.log(state);
+        // we can straightly pass this observable in async pipe which accept a promise or observable.
+        this.pizzas$ = this.store.select(fromStore.getAllPizzas);
+      }
+    )
+  }
+}
+
+```
+
 
 
 
