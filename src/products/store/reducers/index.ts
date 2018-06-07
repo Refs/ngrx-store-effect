@@ -1,5 +1,5 @@
 import * as fromPizzas from './pizzas.reducer';
-import { ActionReducerMap } from '@ngrx/store';
+import { ActionReducerMap, createFeatureSelector, createSelector } from '@ngrx/store';
 
 
 // the feature module state which is the slice of entire state, and contain all state slice in module itself;
@@ -11,3 +11,32 @@ export interface ProductsState {
 export const reducers: ActionReducerMap<ProductsState> = {
   pizzas: fromPizzas.reducer,
 }
+
+// export declare function createFeatureSelector<T>(featureName: string): MemoizedSelector<object, T>;
+// feature module state selector
+export const getProductsState = createFeatureSelector<ProductsState>('products');
+
+// pizzas selector
+export const getPizzaState = createSelector(
+  getProductsState,
+  (state: ProductsState) => state.pizzas
+)
+
+// data selector
+export const getAllPizzas = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzas
+)
+
+// loaded selector
+export const getPizzasLoaded = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasLoaded
+)
+
+// loading selector
+export const getPizzasLoading = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasLoading
+)
+

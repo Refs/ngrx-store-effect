@@ -622,13 +622,14 @@ export class ProductsComponent implements OnInit {
     // )
     // instead of passing in a string , because we would have to manually go down from products and then we'd have to go to pizzas 
 
-    this.store.select(fromStore.getAllPizzas).subscribe(
-      state =>{
-        // console.log(state);
-        // we can straightly pass this observable in async pipe which accept a promise or observable.
-        this.pizzas$ = this.store.select(fromStore.getAllPizzas);
-      }
-    )
+    this.pizzas$ = this.store.select(fromStore.getAllPizzas);
+    // this.store.select(fromStore.getAllPizzas).subscribe(
+    //   state =>{
+    //     // console.log(state);
+    //     // we can straightly pass this observable in async pipe which accept a promise or observable.
+        
+    //   }
+    // )
   }
 }
 

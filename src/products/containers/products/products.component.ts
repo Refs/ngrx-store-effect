@@ -26,11 +26,11 @@ import * as fromStore from '../../store';
         </a>
       </div>
       <div class="products__list">
-        <div *ngIf="!((pizzas)?.length)">
+        <div *ngIf="!((pizzas$ | async )?.length)">
           No pizzas, add one to get started.
         </div>
         <pizza-item
-          *ngFor="let pizza of (pizzas)"
+          *ngFor="let pizza of (pizzas$ | async )"
           [pizza]="pizza">
         </pizza-item>
       </div>
@@ -38,17 +38,18 @@ import * as fromStore from '../../store';
   `,
 })
 export class ProductsComponent implements OnInit {
-  pizzas: Pizza[];
+  pizzas$: Observable<Pizza[]>;
 
   // constructor(private pizzaService: PizzasService) {}
   constructor(private store: Store<fromStore.ProductsState>) {
   }
 
   ngOnInit() {
-    this.store.select<any>('products').subscribe(
-      state => {
-        console.log(state);
-      }
-    )
+    // this.store.select<any>('products').subscribe(
+    //   state => {
+    //     console.log(state);
+    //   }
+    // )
+    this.pizzas$ = this.store.select(fromStore.getAllPizzas)
   }
 }
