@@ -823,6 +823,7 @@ import { Effect, Actions } from '@ngrx/effects';
 
 // import actions
 import * as pizzaActions from './actions/pizzas.action';
+import * as fromServices from '../../services';
 
 import { switchMap, map, catchError } from 'rxjs/operators'；
 import { of } from 'rxjs/observable/of';
@@ -833,7 +834,10 @@ export class PizzasEffects {
   // Now the role of reducer is to actually deal with pure javascript state and immutabe objects . In this case we're going to listening to some events that are acturally dispatched ,however we're dealing with observable streams and in our case we're using the pizza service to fetch some pizzas and then dispatch a new success action when they come back from server .
 
   // Actions is an observable 
-  constructor(private action$: Actions) {}
+  constructor(
+    private action$: Actions, 
+    private pizzaService: fromServices.PizzasService
+  ) {}
   
   // create property called loadPizzas$ which is going to be an observable 
   // we can actually say that we want to listen an action of the  specific type 
