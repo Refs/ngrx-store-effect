@@ -12,8 +12,6 @@ export enum PizzaActionTypes {
 // action creators
 export class LoadPizzas implements Action {
   readonly type : PizzaActionTypes.LOAD_PIZZAS;
-  constructor( ) {
-  }
 }
 export class LoadPizzasFail implements Action {
   readonly type : PizzaActionTypes.LOAD_PIZZAS_FAIL;

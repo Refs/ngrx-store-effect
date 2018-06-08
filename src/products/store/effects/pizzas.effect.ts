@@ -16,29 +16,18 @@ import { of } from 'rxjs/observable/of';
 export class PizzasEffects {
 
   constructor(private actions$: Actions, private pizzasService: fromService.PizzasService) {
+    // console.log(pizzaActions.PizzaActionTypes.LOAD_PIZZAS)
   }
 
   @Effect()
-  loadPizzas$ = this.actions$
-                .ofType( pizzaActions.PizzaActionTypes.LOAD_PIZZAS )
-                .pipe(
-                  switchMap(
-                    () => {
-                      return this.pizzasService
-                             .getPizzas()
-                             .pipe(
-                               map(
-                                 (pizzas) => {
-                                  new pizzaActions.LoadPizzasSuccess(pizzas);
-                                 }
-                               ),
-                               catchError(
-                                 (error) => {
-                                   return of( new pizzaActions.LoadPizzasFail(error) )
-                                 }
-                               )
-                             )
-                    }
-                  )
-                )
+  loadPizzas$ = this.actions$.ofType(pizzaActions.PizzaActionTypes.LOAD_PIZZAS).pipe(
+    switchMap(() => {
+      return this.pizzasService
+        .getPizzas()
+        .pipe(
+          map(pizzas => new pizzaActions.LoadPizzasSuccess(pizzas)),
+          catchError(error => of(new pizzaActions.LoadPizzasFail(error)))
+        );
+    })
+  );
 }

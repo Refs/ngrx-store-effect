@@ -66,6 +66,7 @@ export function reducer(
       // load success event
     case fromPizzas.PizzaActionTypes.LOAD_PIZZAS_SUCCESS:
       {
+        console.log(action.payload);
         return {
           ...state,
           loading: false,
