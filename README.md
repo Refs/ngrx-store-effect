@@ -783,7 +783,7 @@ export class ProductsComponent implements OnInit {
 
 ```
 
-3. create pizzas.action.ts
+3. create pizzas.effect.ts
 
 ```bash
 
@@ -810,7 +810,7 @@ export class ProductsComponent implements OnInit {
 ```
 
 ```ts
-// pizzas.action.ts
+// pizzas.effect.ts
 
 // Inside with this file , I will roll with the effect is to actually listen for that load pizzas action and then we're going to produce a different side effect.
 // The side effect of this case is we're acturally communication via HTTP to our local server and then we're going to bring that information back and then we're going to dispatch a new action saying that the request was successful .
@@ -824,6 +824,9 @@ import { Effect, Actions } from '@ngrx/effects';
 // import actions
 import * as pizzaActions from './actions/pizzas.action';
 
+import { switchMap, map, catchError } from 'rxjs/operators'；
+import { of } from 'rxjs/observable/of';
+
 @Injectable()
 export class PizzasEffects {
   // effect is essenctially a class which contains a few properties which happen to be observables. now our observables get called by ngrx effects and kind of in a way act like a reducer so it allow us to reponse to different events  and do different things 
@@ -834,7 +837,7 @@ export class PizzasEffects {
   
   // create property called loadPizzas$ which is going to be an observable 
   // we can actually say that we want to listen an action of the  specific type 
-  // *because in our component we have just dispatched that 'LOAD_PIZZAS'*, so  we just will listen to the 'LOAD_PIZZAS' action. 
+  // *because in our component we have just dispatched that 'LOAD_PIZZAS'*, so  we just will listen to the 'LOAD_PIZ ZAS' action. 
   //*********************************************************************
   // This is where we want to perform a side effect . This is an observable stream and we can add observables to it we can return new observables and interestingly enough angular's HTTP client module returns an observable which means it fits directly into an effect .(因为 HTTP 模块也是返回 一个observable, 所以我们可以将 HTPP 模块 加到observable 流里面， 然后返回一个新的 observable), 这个逻辑 就类似于 promise chain 一样，一样的，无非是换了一种形式而已， 此处也是神技了 执行异步的神技）
   //*******************************************
@@ -844,8 +847,183 @@ export class PizzasEffects {
   loadPizzas$ = this.actions$
               .ofType( pizzaActions.LOAD_PIZZAS )
               // the pipe doesn't really do much itself but we can pass other operators go inside the pipe and this just simply contains a stream of pure functions instead of chaining them with the prototype ooperators so this 
-              .pipe()
+              .pipe(
+                switchMap(
+                  () => {
+                    return this.pizzaService.getPizzas().pipe(
+                      map(
+                        pizzas => new pizzaActions.LoadPizzasSuccess(pizzas),
+                      ),
+                      catchError(
+                        // 当 请求出现了错误，则我们所接收到的，就不再是一个 observable 了，服务器返回的只是一个error.  而 loadPizzas$ 是一个 observable 类型的，所以再返回之前我们需要将器转化为一个 observable; 利用of 函数；
 
+                        // import { ArrayObservable } from './ArrayObservable';
+                         // export const of = ArrayObservable.of;
+                         // 即 of 是 Observable.of
+                        error => of(new pizzaActions.LoadPizzasFail(error));
+                      )
+                    )
+                  }
+                )
+              )
+}
+
+```
+
+> The effect allows us to communicate with the outside world and then the whole idea is that we bring data back to our reducer .  
+> 这就像一个中间件 ---> express 中间件，是截取 req 流； 而 ngrx 中间件是 截取 action stream ---> actions$; 也是对这个流 做一部分处理  ` 但 即然 其为 actrion 流，不管对其做了什么处理，不管其变为了什么，其始终是action 流（type限制），其始终要流向reducer, 然后导致 sate 变化`
+
+> THe complete round trip for our effects class: We're listening to the 'LOAD_PIZZAS' event which we're dispatching that in the component . we're using a switchMap operator to switch to a brand new stream `which means that the new action is returned to our @Effect()`. By default an effect will dispatch in action , we can config it with option ---> @Effect( { dispatch: false } ) this is an option that nothing will be dispatched 
+
+4. /effects/index.ts
+
+```bash
+
++-- app
++-- products/
+    +-- products.module.ts
+    +-- container/
+    +-- components/
+    +-- models/
+    +-- services/
+    +-- store/
+        +-- index.ts
+        +-- actions/
+            +-- pizzas.action.ts
+            +-- index.ts
+        +-- effects
+            +-- pizzas.effect.ts
+        +-- reducers/
+            +-- pizzas.reducer.ts
+            +-- index.ts
+        +-- index.ts
+    +-- products.module.ts
+
+```
+
+```ts
+// store/effects/index.ts
+
+import { PizzasEffects } from './pizzas.effect';
+
+//we just want ro maintain everything in this one file ;
+// we can basically create an array of effects , we can give it a type of any array and we can just simply pass that pizza effectsas the first element.
+// this means that in our module ,we can just import the effects array and just register them as a whole , and we don't need to keep importing things . It ends up with this really big module file with all these imports everywhere. 
+export const effects: any[] = [ PizzasEffects ];
+
+// This is pretty much what 
+export * from './pizzas.effect';
+
+```
+
+```ts
+// store/index.ts
+export * from './reducers';
+export * from './actions';
+export * from './effects';
+
+```
+
+5. to register the EffectsModule
+
+```ts
+// products.module.ts
+
+import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Routes, RouterModule } from '@angular/router';
+import { ReactiveFormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+
+// import the effects array
+import { reducers, effects } from './store';
+import * as fromComponents from './components';
+import * as fromContainers from './containers';
+import * as fromServices from './services';
+
+export const ROUTES: Routes = [
+  {
+    path: '',
+    component: fromContainers.ProductsComponent,
+  },
+  {
+    path: ':id',
+    component: fromContainers.ProductItemComponent,
+  },
+  {
+    path: 'new',
+    component: fromContainers.ProductItemComponent,
+  },
+];
+
+@NgModule({
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    HttpClientModule,
+    RouterModule.forChild(ROUTES),
+    StoreModule.forFeature('products',reducers),
+    // register EffectsModule
+    EffectsModule.forFeature(effects)
+  ],
+  providers: [...fromServices.services],
+  declarations: [...fromContainers.containers, ...fromComponents.components],
+  exports: [...fromContainers.containers, ...fromComponents.components],
+})
+export class ProductsModule {}
+
+```
+
+6. modify the initial sate in the reducer
+
+```ts
+// initial state
+export const initialState: PizzaState = {
+  data: [],
+  loaded: false,
+  loading: false
+};
+
+// reducer function
+export function reducer(
+  state = initialState,
+  action: fromPizzas.PizzasAction
+): PizzaState {
+  switch (action.type) {
+    // loading event
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS:
+      {
+        return {
+          ...state,
+          loading: true
+        }
+      }
+
+      // load success event
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS_SUCCESS:
+      {
+        const data = action.payload;
+        return {
+          ...state,
+          loading: false,
+          loaded: true,
+          data
+        }
+      }
+
+      // load fail event
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS_FAIL:
+      {
+        return {
+          ...state,
+          loading: false,
+          loaded: false
+        }
+      }
+  }
+  return state;
 }
 
 ```
