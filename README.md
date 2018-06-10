@@ -1257,4 +1257,47 @@ Now it might be in multiple places that we want to use the pizzas as an array , 
 
 ## c 13 integrating @ngrx/router-store
 
+What the router-store allow us to do is bind the representation of the route and the route of state to the actual ngrx store . So this gives us much power when it comes to composing selectors . 
+
+So for instance when we click on a particular pizza , we know that we have `the number 1 in the url which corresponds to the ID of the pizza .
+
+What we actually want to do is find this route state to our application state , so we can treat this as one source of truth like we talked about at the begining of this this course , Everything is a single source of truth even url .
+
+Now what we can do is introduce ngrx router store and it will automatically bind this state to our store for us , so that's what we're going to do . We're going to set things up then we're going to create selectors to allow us to actually select via our store  the crrent pizza that we are on a page , the we're going to talk about how to refactor our selectors so we can make them a bit more neat and abit organized  
+
+```bash
+
++-- app
+    +-- container/
+    +-- store/
+        +-- index.ts
+        +-- reducers/
+            +-- index.ts
+    +-- app.module.ts
+
+```
+
+```ts
+// store/index.ts
+
+export * from './reducers';
+
+```
+上面这一个 index.ts 中的内容是比较常规的做法，所以在文件创建好之后，就应该将这句代码写上去， 但由于store/reducers 文件夹中没有export 的东西，所以 上述代码写完之后，会显示一个错误信息， 解决的办法如下，在store/reducers/index.ts 随便暴露出一个变量，作为占位，临时修复这个问题； 这个一个适用的小技巧；
+
+```ts
+// store/reducers/index.ts 
+
+export const a = '';
+```
+
+We want to essentially set up the state of what the Router state will look like  , We're going to do is export an interface State. we actually initialized our store module --- app.module.ts   
+
+```ts
+// store/reducers/index.ts
+
+export 
+
+```
+
 
