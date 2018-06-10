@@ -7,14 +7,16 @@ import * as fromPizzas from '../actions/pizzas.acton';
 
 // state slice interface
 export interface PizzaState {
-  data: Pizza[];
+  // data: Pizza[];
+  entities: {[id: number]: Pizza}
   loaded: boolean;
   loading: boolean;
 }
 
 // initial state
 export const initialState: PizzaState = {
-  data: [],
+  // data: [],
+  entities: {},
   loaded: false,
   loading: false
 };
@@ -37,13 +39,25 @@ export function reducer(
       // load success event
     case fromPizzas.PizzaActionTypes.LOAD_PIZZAS_SUCCESS:
       {
-        console.log(action.payload);
-        const data = action.payload;
+        // console.log(action.payload);
+        // const data = action.payload;
+        const pizzas = action.payload;
+        const entities = pizzas.reduce(
+          (entities: {[id: number]: Pizza}, pizza: Pizza) => {
+            return {
+              ...entities,
+              [pizza.id]: pizza
+            }
+          }
+          ,{
+             ...state.entities
+          }
+        )
         return {
           ...state,
           loading: false,
           loaded: true,
-          data
+          entities
         }
       }
 
@@ -61,6 +75,6 @@ export function reducer(
 }
 
 // selectors
-export const getPizzas = (state: PizzaState) => state.data;
+export const getPizzasEntities = (state: PizzaState) => state.entities;
 export const getPizzasLoaded = (state: PizzaState) => state.loaded;
 export const getPizzasLoading = (state: PizzaState) => state.loading;

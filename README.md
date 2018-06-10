@@ -1035,7 +1035,7 @@ export function reducer(
 ```
 
 
-## Optimizing Datastructure with Entities
+## c12 Optimizing Datastructure with Entities
 
 We're going to optimizing our data structures for performance reason . So what we're going to do is jump into pizzas.reducers.ts file . in there we just hava an array of pizzas . Now in a bigger application this is not going to scale or handle well when we want to do things very fast . So thinking ablout using objects instead of an array might be better approach. 
 
@@ -1189,10 +1189,32 @@ export const getPizzaState = createSelector(
 )
 
 
-export const getAllPizzas = createSelector(
+
+//1. Now we're doing is acturally passing the fromPizzas.getPizzasEntities as the second argument to this selector  which means we need to create another selector to allow us to acturally get all of these as an array value we want them as an array , and we dont want them as objects . 
+
+//2.  So what we can do instead of creating this getAllPizzas, we can rename this to get pizzas entities so we use the same function names as before , but we'just exporting then on level up , we're not clashing with names or anything like this we acturally want to create the ability for us to select all of the pizzas as an array 
+
+export const getPizzasEntities = createSelector(
   getPizzaState,
   fromPizzas.getPizzasEntities
 )
+
+//3.  we're actually doing is replace the selector with a new one .  we're passing the getPizzasEntities as the first argument , and because this is a selector , we can also use it as a function , so we don't have to use those functions which are exported from different levels `we can use the selectors to compose brand new state. `
+
+export const getAllPizzas = createSelector(
+  getPizzasEntities,
+  // we get the given entities because that is what we passing through getPizzasEntities, callback will be called with the given entities . What we want to do inside of callback function is to convert the  entities object data structure in an array with Object.keys() method .
+  // Object.keys() accpet a object argument, return a array which is composed by the object's key . var obj = {'a':'123','b':'345'}; --> console.log(Object.keys(obj));  //['a','b']
+  // we're simply doing is something that looks like this and then mapping over it and return the actual entity which is the corresponds with each IDs . [1,2,3].map()
+  (entities) => {
+    // be carefully the element return by the Object.keys() is string, what we need is a number index, so We need parseInt() method to convert it to number。 parseInt() accept two argument , the first is the string which we're going to convert , the second is 数字进制； 10 is represent 十进制；
+    Object.keys(entities).map(
+      id => entities[parseInt(id , 10)]
+    )
+    // conclusion : We should get all pizzas , get the entities as the first argument  , we're hpoing to return the Object.keys() which gices us every single key as a string , we're then looping over those , we get each ID and we're using that entities whch is above to then look each item up by its ID and we just simply just passing that string in but convert it to a number , now it depends how you're structuring things in your database , you may use a completely string or a number approach 
+  }
+)
+
 
 
 export const getPizzasLoaded = createSelector(
@@ -1209,7 +1231,30 @@ export const getPizzasLoading = createSelector(
 
 ```
 
-3. 
+3. refactory containers/products/products.component.ts
 
+```ts
+// containers/products/products.component.ts
+
+export class ProductsComponent implements OnInit {
+  pizzas$: Observable<Pizza[]>;
+
+  constructor(private store: Store<fromStore.ProductsState>) {
+  }
+
+  ngOnInit() {
+    // It's in selector files  to compose the result we want  
+    this.pizzas$ = this.store.select(fromStore.getAllPizzas);
+    this.store.dispatch(new fromStore.LoadPizzas());
+
+  }
+}
+
+```
+
+We're composing the pizzas' data in the reducer as entities and then with a selector we're converting those entities into just a nice array . Then we can feed the array into  Ngfor directive and then iterate it nicely .
+Now it might be in multiple places that we want to use the pizzas as an array , so this makes perfect sense to create a selector and the beauty with selector as they are reusable functions , so we ca use them in multiple places and we can also use selectors with other selectors , so  once we're creating some more advanced selectors which tie in things like the route state . how we can acturally load the topping and display those topping 
+
+## c 13 integrating @ngrx/router-store
 
 
