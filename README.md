@@ -1041,7 +1041,7 @@ We're going to optimizing our data structures for performance reason . So what w
 
 So what we're going to do instead of using an array we're acturally going to change our data structure over to what we call an entity . In the server side you might  have entities and we might look things up by IDs `in this case you can think of ngrx store as some kind of database for te client`, then we can use the selectors which we've already created  to query the database and compose new object and return them to our component 
 
-
+1. refactory store/reducers/pizzas.reducer.ts
 
 ```ts
 // store/reducers/pizzas.reducer.ts
@@ -1117,14 +1117,34 @@ export function reducer(
         const pizzas = action.payload 
 
         //-2- create the entities constant which will rebinded to our new return state. you could obviously break these types of things into a particular file where you can bring them in and convert a data structure to an entities of you liking.  可以将处理函数单独的放到一个文件中 以复用， 而此处我们只在文件内部定义；
-        //-3- utilize reducer method to convert
-        const entities = pizzas.reduce()
+        //-3- utilize reducer method to convert; 
+        /**
+          *   reduce 会接收两个参数，一个是callback函数，一个是一个初始值
+          *   初始值 会首先赋值给 callback 的第一个参数， 紧接着callback 每一次的执行结果，有又会赋值给callback的第一个参数，
+          *   数组每次遍历的 item 会赋值给callback 函数的第二个参数；
+          *   数组每遍历一个元素，callback都会被执行一次
+          */
+        const entities = pizzas.reduce(
+          (entities: {[id:number]: Pizza},
+           pizza: Pizza
+          ) => {
+            return {
+              ...entities,
+              [pizza.id]: pizza
+            }
+          },
+          {
+            ...state.entities
+          }
+        )
 
+        //-4-  we're taking an array and we're flattening( 使 变平) the array into just pure object (  也就是说，刚开始的结构是 分为多层的 最外层是数组， 向内是一个对象， 而现在我们将这个数组，平铺成为一个对象， 这就是flatten的含义) . So we can look up really fast .   
+        //-5- I think about feature when want to remove something from an array we don't have to iterate it if we want to update it we don't have to go and find it . We can just look it on our date structure and  just simply replace it . It makes these things a little bit easier as well . 
         return {
           ...state,
           loading: false,
           loaded: true,
-          data
+          entities
         }
       }
 
@@ -1141,5 +1161,55 @@ export function reducer(
   return state;
 }
 
+//-6- we should alse need to update getPizzas to getPizzasEntities 
+
+// selectors
+// export const getPizzas = (state: PizzaState) => state.data;
+export const getPizzasEntities = (state: PizzaState) => state.entities;
+export const getPizzasLoaded = (state: PizzaState) => state.loaded;
+export const getPizzasLoading = (state: PizzaState) => state.loading;
+
 ```
+
+
+2. refactory store/reducers/index.ts
+
+> update the selectors
+
+```ts
+// store/reducers/index.ts
+
+
+export const getProductsState = createFeatureSelector<ProductsState>('products');
+
+
+export const getPizzaState = createSelector(
+  getProductsState,
+  (state: ProductsState) => state.pizzas
+)
+
+
+export const getAllPizzas = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasEntities
+)
+
+
+export const getPizzasLoaded = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasLoaded
+)
+
+
+export const getPizzasLoading = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasLoading
+)
+
+
+```
+
+3. 
+
+
 
