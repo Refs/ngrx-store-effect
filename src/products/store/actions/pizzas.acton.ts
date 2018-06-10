@@ -11,15 +11,15 @@ export enum PizzaActionTypes {
 
 // action creators
 export class LoadPizzas implements Action {
-  readonly type : PizzaActionTypes.LOAD_PIZZAS;
+  readonly type = PizzaActionTypes.LOAD_PIZZAS;
 }
 export class LoadPizzasFail implements Action {
-  readonly type : PizzaActionTypes.LOAD_PIZZAS_FAIL;
+  readonly type = PizzaActionTypes.LOAD_PIZZAS_FAIL;
   constructor( public payload: any ) {
   }
 }
 export class LoadPizzasSuccess implements Action {
-  readonly type : PizzaActionTypes.LOAD_PIZZAS_SUCCESS;
+  readonly type = PizzaActionTypes.LOAD_PIZZAS_SUCCESS;
   constructor( public payload: Pizza[] ) {
   }
 }

@@ -983,6 +983,8 @@ export class ProductsModule {}
 6. modify the initial sate in the reducer
 
 ```ts
+// store/reducers/pizzas.reducer.ts
+
 // initial state
 export const initialState: PizzaState = {
   data: [],
@@ -1033,6 +1035,111 @@ export function reducer(
 ```
 
 
+## Optimizing Datastructure with Entities
+
+We're going to optimizing our data structures for performance reason . So what we're going to do is jump into pizzas.reducers.ts file . in there we just hava an array of pizzas . Now in a bigger application this is not going to scale or handle well when we want to do things very fast . So thinking ablout using objects instead of an array might be better approach. 
+
+So what we're going to do instead of using an array we're acturally going to change our data structure over to what we call an entity . In the server side you might  have entities and we might look things up by IDs `in this case you can think of ngrx store as some kind of database for te client`, then we can use the selectors which we've already created  to query the database and compose new object and return them to our component 
 
 
+
+```ts
+// store/reducers/pizzas.reducer.ts
+
+// state slice interface
+export const initialState: PizzaState = {
+  //--1 So what we want to do now is to refactor this over to became an entity . we're going to create an object which holds our entities and we're going to store them via an ID which which is going to be of type number . now every single entity will hold each particular pizza . So instead of just having one data property we're going to have entities which contains all of our pizzas and each pizzas ID is going to be the key inside the object .
+
+  // data: [],
+  // Indexable Types； if we use entities[10] it must be of type Pizzas; 
+  entities: { [id: number]: Pizzas },
+  loaded: false,
+  loading: false
+};
+
+
+// initial state
+export const initialState: PizzaState = {
+  // data: [],
+  //--2 what we want to do is just initializa entities with a brand new empty object . 
+  entities: {},
+  loaded: false,
+  loading: false
+};
+
+// reducer function
+export function reducer(
+  state = initialState,
+  action: fromPizzas.PizzasAction
+): PizzaState {
+  switch (action.type) {
+    // loading event
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS:
+      {
+        return {
+          ...state,
+          loading: true
+        }
+      }
+
+      // load success event
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS_SUCCESS:
+      {
+        // console.log(action.payload);
+        // const data = action.payload;
+        /**
+         * --3 conver the array structure which is:
+         *  [
+         *    {id:1, name:one}, 
+         *    {id:2, name : two}
+         *  ]
+         * to object structure .
+         * when we do things like subscribe to route params for instance you've probably seen while the user clicking through the spplication . Then when you go to a pizzas ,we acturally go to the pizza id which is `/products/IDs` .  It could be ID of one , of two .
+         * 
+         * So the key of object will contain the value of the ID of the object . so what this means is we can actually be very quick . We can say entities[id ] that we can find the exact object we need we don't have to iterate through a gigantic data set every single time . 
+         * 
+         * {
+         *    1: {
+         *      id: 1,
+         *      name: one
+         *    },
+         *    2: {
+         *      id: 2,
+         *      name: two
+         *    }
+         * }
+         * 
+         * 
+         * 
+         * */
+        
+        //-1- create a variable to accept the pizzas array
+        const pizzas = action.payload 
+
+        //-2- create the entities constant which will rebinded to our new return state. you could obviously break these types of things into a particular file where you can bring them in and convert a data structure to an entities of you liking.  可以将处理函数单独的放到一个文件中 以复用， 而此处我们只在文件内部定义；
+        //-3- utilize reducer method to convert
+        const entities = pizzas.reduce()
+
+        return {
+          ...state,
+          loading: false,
+          loaded: true,
+          data
+        }
+      }
+
+      // load fail event
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS_FAIL:
+      {
+        return {
+          ...state,
+          loading: false,
+          loaded: false
+        }
+      }
+  }
+  return state;
+}
+
+```
 

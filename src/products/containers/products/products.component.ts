@@ -9,10 +9,6 @@ import { Observable } from 'rxjs/Observable';
 // import the store
 import * as fromStore from '../../store';
 
-
-
-
-
 @Component({
   selector: 'products',
   styleUrls: ['products.component.scss'],
