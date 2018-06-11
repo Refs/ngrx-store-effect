@@ -1257,6 +1257,8 @@ Now it might be in multiple places that we want to use the pizzas as an array , 
 
 ## c 13 integrating @ngrx/router-store
 
+> router-store is also a store, that means it also has actions, reducers, state, and it also need be registered in the StoreModule.forRoot() of StoreMOdule.forFeature()  
+
 What the router-store allow us to do is bind the representation of the route and the route of state to the actual ngrx store . So this gives us much power when it comes to composing selectors . 
 
 So for instance when we click on a particular pizza , we know that we have `the number 1 in the url which corresponds to the ID of the pizza .
@@ -1264,6 +1266,9 @@ So for instance when we click on a particular pizza , we know that we have `the 
 What we actually want to do is find this route state to our application state , so we can treat this as one source of truth like we talked about at the begining of this this course , Everything is a single source of truth even url .
 
 Now what we can do is introduce ngrx router store and it will automatically bind this state to our store for us , so that's what we're going to do . We're going to set things up then we're going to create selectors to allow us to actually select via our store  the crrent pizza that we are on a page , the we're going to talk about how to refactor our selectors so we can make them a bit more neat and abit organized  
+
+
+1. create reducers
 
 ```bash
 
@@ -1291,13 +1296,122 @@ export * from './reducers';
 export const a = '';
 ```
 
-We want to essentially set up the state of what the Router state will look like  , We're going to do is export an interface State. we actually initialized our store module --- app.module.ts   
+We want to essentially set up the state of what the Router state will look like  , We're going to do is export an interface State. we actually initialized our store module --- app.module.ts   and we've already registered our StoreModule in the app.moudle.ts--- `StoreModule.forRoot({}, { metaReducers })` , This means that we're initializing our route of the state of the application , however we're not actually using any reducers , So this is a great place our app module where we can keep track of the root state which allows us then use it in feature modules , such as products , so we can always know where we are at a point in time . 
 
 ```ts
 // store/reducers/index.ts
 
-export 
+import * as fromRouter from '@ngrx/router-store';
+
+// import the queryParams type 
+import { Params } from '@angular/router';
+
+// import the ActionReducerMap to type the reducers 
+import { ActionReducerMap } from '@ngrx/store';
+
+// import the createFeatureSelector to create  selector;
+import { createFeatureSelector } from '@ngrx/store';
+
+// there's a fwe more things that we need to do to get this set up properly :
+// (1) the first we need to do is actually define what this router of state is going to look like :
+
+export interface RouterStateUrl {
+  url: string;
+  queryParams: Params;
+  params: Params
+}
+
+// export the interface of State is going to have a property called the RooterReducer . Now the ngrx route-store project requires you actually do this. so we need to supply the word of RouterReducer, so we need to keep that as the key on our state 
+//-1- the state interface
+export interface State {
+  // the RouterStateUrl is essentially to say that our route a reducer `rooterReducer: fromRouter.routerReducer`  is going to actually be conforming to  RouterStateUrl interface . So we're only going to supply the url, queryParams, params
+  routerReducer: fromRouter.RouterReducerState<RouterStateUrl>;
+}
+
+
+// The '@ngrx/router-store' package is essentially giving us this state representation whcih means we can actually  export some new reducers ;
+// The '@ngrx/router-store' gives us all of this for free we just simply import it and wer bind it to our routerReducers which we've called the router reducers because it's going to live inside of our app module at the root of our project , it just so happens that it includes a rooterReducer 
+//-2- the store reducers
+export const reducers: ActionReducerMap<State> = {
+  rooterReducer: fromRouter.routerReducer
+}
+
+
+// 3 create selectors :
+// Much like in our other reducers we also want ro create a selector so that we can ask for this particular piece Of State, 
+// (2) getRouterState which actually allow us to add this getRouterState to another selector inside of our products folder ;
+
+export const getRouterState = createFeatureSlector<
+  // THis generic is making sure that we've typed things correctly , we do this is just to making sure that we can only tell the createFeatureSlector that you can access some of these properties on the root reducer;
+
+  // 'routerReducer' is the property of the Root State;
+  fromRouter.RouterReducerState<RouterStateUrl>
+>('routerReducer')
 
 ```
+
+2. register our reducers
+
+```ts
+// src/app/app.module.ts
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { Routes, RouterModule } from '@angular/router';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+import { StoreModule, MetaReducer } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+
+//1. import the ActionReducerMap reducers 
+import { reducers } from './store';
+
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { storeFreeze } from 'ngrx-store-freeze';
+
+const environment = {
+  development: true,
+  production: false,
+};
+
+export const metaReducers: MetaReducer<any>[] = !environment.production
+  ? [storeFreeze]
+  : [];
+
+import { AppComponent } from './containers/app/app.component';
+
+export const ROUTES: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'products' },
+  {
+    path: 'products',
+    loadChildren: '../products/products.module#ProductsModule',
+  },
+];
+
+@NgModule({
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    RouterModule.forRoot(ROUTES),
+    // replace the empty object in forRoot(), with our new reducers
+    StoreModule.forRoot(reducers, { metaReducers }),
+    EffectsModule.forRoot([]),
+    environment.development ? StoreDevtoolsModule.instrument() : [],
+  ],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+
+```
+
+3. there is one more step that we need to make and that's how we take the root of State . The root of store package give us the capablility to do this but we need to actually supply a function which we call a custom serializer 
+
+## c 14 Custom Router State Serializers
+
+
+
+
+
 
 
