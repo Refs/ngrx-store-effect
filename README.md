@@ -1407,10 +1407,71 @@ export class AppModule {}
 
 3. there is one more step that we need to make and that's how we take the root of State . The root of store package give us the capablility to do this but we need to actually supply a function which we call a custom serializer 
 
-## c 14 Custom Router State Serializers
+## c 14 Custom Router State 
+
+We're almost done with our route reducer , however to get things working we need to provide what we call a custom serializer .
+
+The custom serializer is essentially passed the route state and what what we can essentially so is take some of the properties of the the route of snapshot and then we can bind those to the store .
+
+So when you for instance inject something like the activated route you can obtain a snapshot which is what the router state looks like at the point in time 
+
+So what we need to do is jump into our app/store/reducers/index.ts
+
+```ts
+/* app/store/reducers/index.ts */
+/*  */ 
+
+import * as fromRouter from '@ngrx/router-store';
+
+// 1. import the ActivatedRouteSnapshot and RouterStateSnapshot from @angular/router
+import { ActivatedRouteSnapshot, RouterStateSnapshot, Params } from '@angular/router';
+
+import { ActionReducerMap } from '@ngrx/store';
+
+import { createFeatureSelector } from '@ngrx/store';
+
+export interface RouterStateUrl {
+  url: string;
+  queryParams: Params;
+  params: Params
+}
+
+export interface State {
+  routerReducer: fromRouter.RouterReducerState<RouterStateUrl>;
+}
+
+export const reducers: ActionReducerMap<State> = {
+  rooterReducer: fromRouter.routerReducer
+}
+
+export const getRouterState = createFeatureSlector<
+  fromRouter.RouterReducerState<RouterStateUrl>
+>('routerReducer')
 
 
+// When you build out your own application it might be that we adjust the custom serializer to give you your own properties you nedd for a specific use case 
 
+export class CustomSerializer 
+  implements fromRouter.RouterStateSerializer<RouterStateUrl>{
+    // This serialize function actually gets given what we can call the RooteState and that is essentially going to match against angular's ActivatedRouteSnapshot
+    serialize(routerState: RouterStateSnapshot): RouterStateUrl {
+      // The things that we need to return is in fact RouterStateUrl, what we need to do is to compose a new object implements RouterStateUrl based on the properties of the Router 
+
+      //-1- get the url from the routerState. we're actually going to to is Destructuring(es6解构赋值) from routerState itself
+      const { url } = routerState;
+      //-2- get queryParams
+      const { queryParams } = routerState.root;
+
+      // The way that the Router actually works is it is a state tree of itself which means that we actually need to traverse the state tree. we're not going to go in to much detail. but we could just kind of explain the concept of what's happening .  So you can understand where we're actually obtain this information from 
+
+      // This returned objeect is acturally what is going to be bound to ngrx stores state tree 
+      return {};
+
+
+    }
+}
+
+```
 
 
 
