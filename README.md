@@ -1409,6 +1409,8 @@ export class AppModule {}
 
 ## c 14 Custom Router State 
 
+1. create the custom serializer
+
 We're almost done with our route reducer , however to get things working we need to provide what we call a custom serializer .
 
 The custom serializer is essentially passed the route state and what what we can essentially so is take some of the properties of the the route of snapshot and then we can bind those to the store .
@@ -1464,12 +1466,91 @@ export class CustomSerializer
 
       // The way that the Router actually works is it is a state tree of itself which means that we actually need to traverse the state tree. we're not going to go in to much detail. but we could just kind of explain the concept of what's happening .  So you can understand where we're actually obtain this information from 
 
-      // This returned objeect is acturally what is going to be bound to ngrx stores state tree 
-      return {};
+      // we are using the let statement because we actually want to resign it , we're going to use a while loop .
+      
+      // Now we can get that initial state from the  routerState.root
+      let state: ActivatedRouteSnapshot = routerState.root;
+
+      // Now because the routerState.root is in fact a state tree , means we can iterate this state tree
+      // any of state properties are available for us to place in our own custom serializer . So what we actually want is the first child , so this will actually allow us to keep iterating through the root of state tree by itself , this isn't the sate tree to do with ngrx , this is the state tree of angular's Router
+      // We're essentially hijacking(劫机 劫持) it and taking a few properties then binding that to our ngrx store , so that's what's happending .
+      // So while we have a firstChild that means that we have child routes .
+      // For instance if we have  /products/1 which means that we need to iterate a few times to be able to go and get that (route program) 
+      while(state.firstChild) {
+        // so while we have a first child , the state is then going to be equal to the state.firstChild;
+        state = state.firstChild; 
+      }
+      // so then each time we can then keep running the while loop and when we get to the end  we can actually grap those params .
+      // const params = state.params;
+      const { params } = state; 
+      
+      // This returned objeect is acturally what is going to be bound to ngrx stores state tree . The route store project which is part of the ngrx project will actually listen to angular's routing events anytime you navigate somewhere or angular navigate somewhere or something changes in the URL , this whole serialize function is going to be called which means we get the new state representation of where we are in the application or all times. So it's important to remember that piece 
+      return { url,queryParams, params };
 
 
     }
 }
+
+```
+
+2. register our custom serializer and StoreRouterConnectingModule
+
+the StoreRouterConnectingModule which allows us to pick up on any changes via the routing navigation .
+
+```ts
+/* app.module.ts */
+
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { Routes, RouterModule } from '@angular/router';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+
+// 1. import StoreRouterConnectingModule and RouterStateSerializer
+import { StoreRouterConnectingModule, RouterStateSerializer } from '@ngrx/router-store';
+import { StoreModule, MetaReducer } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+
+// 3. import our custom serializer
+import { reducers, CustomSerializer } from './store';
+
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { storeFreeze } from 'ngrx-store-freeze';
+
+const environment = {
+  development: true,
+  production: false,
+};
+
+export const metaReducers: MetaReducer<any>[] = !environment.production
+  ? [storeFreeze]
+  : [];
+
+import { AppComponent } from './containers/app/app.component';
+
+export const ROUTES: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'products' },
+  {
+    path: 'products',
+    loadChildren: '../products/products.module#ProductsModule',
+  },
+];
+
+@NgModule({
+  imports: [
+    BrowserModule,
+    BrowserAnimationsModule,
+    RouterModule.forRoot(ROUTES),
+    StoreModule.forRoot(reducers, { metaReducers }),
+    EffectsModule.forRoot([]),
+    //2. register StoreRouterConnectingModule in @Ngmodule,then router package can then keep our state updated in our state tree 
+
+    // 3. we need to provide CustomSerializer, this is tie in with angular's dependency injection , so what we're going to do is essentially provide a route of state serializer and 
+    environment.development ? StoreDevtoolsModule.instrument() : [],
+  ],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
 
 ```
 
