@@ -1333,7 +1333,7 @@ export interface State {
 // The '@ngrx/router-store' gives us all of this for free we just simply import it and wer bind it to our routerReducers which we've called the router reducers because it's going to live inside of our app module at the root of our project , it just so happens that it includes a rooterReducer 
 //-2- the store reducers
 export const reducers: ActionReducerMap<State> = {
-  rooterReducer: fromRouter.routerReducer
+  routerReducer: fromRouter.routerReducer
 }
 
 
@@ -1564,6 +1564,12 @@ export class AppModule {}
 
 ```
 
+
+## vscode bug
+
+1. 'Variable' is declared but its value is never read VScode
+
+> https://stackoverflow.com/questions/50915527/variable-is-declared-but-its-value-is-never-read-vscode/50915887
 
 
 
