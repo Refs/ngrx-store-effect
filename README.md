@@ -1564,6 +1564,105 @@ export class AppModule {}
 
 ```
 
+## c15 Router State Selectors
+
+It's time to migrate our selectors out of 'products/store/reducers/index.ts', because as our application grow , the index.ts file isn't a very scalable architecture to keep everything in a single file ;
+
+```bash
+
++-- products
+    +-- store
+        +-- selectors
+            + index.ts
+            + pizzas.selectors.ts
+```
+
+1. in products/store/reducers/index.ts
+> 
+
+```ts
+import * as fromPizzas from './pizzas.reducer';
+import { ActionReducerMap, createFeatureSelector, createSelector } from '@ngrx/store';
+
+export interface ProductsState {
+  pizzas: fromPizzas.PizzaState,
+}
+
+// register reducer
+export const reducers: ActionReducerMap<ProductsState> = {
+  pizzas: fromPizzas.reducer,
+}
+
+
+export const getProductsState = createFeatureSelector<ProductsState>('products');
+
+// pizzas selector
+export const getPizzaState = createSelector(
+  getProductsState,
+  (state: ProductsState) => state.pizzas
+)
+
+export const getPizzasEntities = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasEntities
+)
+
+// data selector
+export const getAllPizzas = createSelector(
+  getPizzasEntities,
+  (entities) => {
+    return Object.keys(entities).map(
+      (id) => {
+       return entities[parseInt(id)];
+      }
+    )
+  }
+)
+
+// loaded selector
+export const getPizzasLoaded = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasLoaded
+)
+
+// loading selector
+export const getPizzasLoading = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasLoading
+)
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## vscode bug
 
