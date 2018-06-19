@@ -1413,7 +1413,7 @@ export class AppModule {}
 
 We're almost done with our route reducer , however to get things working we need to provide what we call a custom serializer .
 
-The custom serializer is essentially passed the route state and what what we can essentially so is take some of the properties of the the route of snapshot and then we can bind those to the store .
+The custom serializer is essentially passed  the route of state and what what we can essentially so is take some of the properties of the the route of snapshot and then we can bind those to the store .
 
 So when you for instance inject something like the activated route you can obtain a snapshot which is what the router state looks like at the point in time 
 
@@ -1422,6 +1422,8 @@ So what we need to do is jump into our app/store/reducers/index.ts
 ```ts
 /* app/store/reducers/index.ts */
 /*  */ 
+
+
 
 import * as fromRouter from '@ngrx/router-store';
 
@@ -1456,6 +1458,7 @@ export const getRouterState = createFeatureSlector<
 export class CustomSerializer 
   implements fromRouter.RouterStateSerializer<RouterStateUrl>{
     // This serialize function actually gets given what we can call the RooteState and that is essentially going to match against angular's ActivatedRouteSnapshot
+    // serialize() method 接收的参数是 RouterStateSnapshot 即 当前的路由状态树， 其要序列化的也是这个东西， 我们想获取的东西，也都得从这里面出来； 里面的东西很多，我们可以自由的去组织里面的东西=（因为这个serializer 方法是我们自定义的）， 以满足我们正常的需要；
     serialize(routerState: RouterStateSnapshot): RouterStateUrl {
       // The things that we need to return is in fact RouterStateUrl, what we need to do is to compose a new object implements RouterStateUrl based on the properties of the Router 
 
@@ -1484,7 +1487,8 @@ export class CustomSerializer
       // const params = state.params;
       const { params } = state; 
       
-      // This returned objeect is acturally what is going to be bound to ngrx stores state tree . The route store project which is part of the ngrx project will actually listen to angular's routing events anytime you navigate somewhere or angular navigate somewhere or something changes in the URL , this whole serialize function is going to be called which means we get the new state representation of where we are in the application or all times. So it's important to remember that piece 
+      // This returned objeect is acturally what is going to be bound to ngrx stores state tree .
+      // The route store project which is part of the ngrx project will actually listen to angular's routing events anytime you navigate somewhere or angular navigate somewhere or something changes in the URL , this whole serialize function is going to be called which means we get the new state representation of where we are in the application or all times. So it's important to remember that piece 
       return { url,queryParams, params };
 
 
@@ -1543,10 +1547,16 @@ export const ROUTES: Routes = [
     StoreModule.forRoot(reducers, { metaReducers }),
     EffectsModule.forRoot([]),
     //2. register StoreRouterConnectingModule in @Ngmodule,then router package can then keep our state updated in our state tree 
+    StoreRouterConnectingModule,
 
-    // 3. we need to provide CustomSerializer, this is tie in with angular's dependency injection , so what we're going to do is essentially provide a route of state serializer and 
     environment.development ? StoreDevtoolsModule.instrument() : [],
   ],
+  // 3. we need to provide CustomSerializer, this is tie in with angular's dependency injection , so what we're going to do is essentially provide a route of state serializer and  use our own custom serializer 
+  // we're registering a provider we're providing the RouterStateSerializer and we're actually saying use our class our custome serializer .
+  // So when our StoreRouterConnectingModule actually internally uses this particular token we're essectially replacing it with our own , So we're in full control of what gets bound to our state tree .  So once you've done that we'll go to the browser and we won't actually visually, but we can use the redux dev-tools .
+  providers: [
+    { provide: RouterStateSerializer, useClass: CustomSerializer  }
+  ]
   declarations: [AppComponent],
   bootstrap: [AppComponent],
 })
