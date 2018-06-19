@@ -1578,28 +1578,56 @@ It's time to migrate our selectors out of 'products/store/reducers/index.ts', be
 ```
 
 1. in products/store/reducers/index.ts
-> 
+> we want to migrate the pizzas selectors to a separate file 'pizzas.selectors.ts'
 
 ```ts
 import * as fromPizzas from './pizzas.reducer';
-import { ActionReducerMap, createFeatureSelector, createSelector } from '@ngrx/store';
 
+//1. remove createSelector
+import { ActionReducerMap, createFeatureSelector  } from '@ngrx/store';
+
+//2. keep 1
 export interface ProductsState {
   pizzas: fromPizzas.PizzaState,
 }
 
-// register reducer
+//3. keep2
 export const reducers: ActionReducerMap<ProductsState> = {
   pizzas: fromPizzas.reducer,
 }
 
-
+//4.  keep3
 export const getProductsState = createFeatureSelector<ProductsState>('products');
 
-// pizzas selector
+// The above three things lie inside of here , because inside of this reducers folder what we're actually goping to do is have multiple reducers and and they all are part of this  `products` feature module which is why it's called a feature selector; 
+
+
+```
+
+2. store/selectors/pizzas.selectors.ts
+
+```ts
+// 1. import createSelector
+import { createSelector } from '@ngrx/store';
+// 2. import everything as fromFeature , because this is a feature module we're going to actually ask for some of the logic that we put in that index file inside the reducer 
+import * as fromFeature from './reducers'; 
+// 3. import everything in pizzas.reducer.ts
+import * as fromPizzas from '../reducers/pizzas.reducer';
+
+// 4. It's actually at this point where we want to take data from the route state and then compose it to go and select an individual pizza entity based on the the route params . So if the route params is 2 , we can go an look up our map of identities using the params[id] . So waht we're going to say 
+import * as fromRoot from '../../../app/store';
+
+// 5. There is one chage we want to make to the routing structure , so before we go any further , Let's change something inside of 'products.module.ts'
+
+// 6 . import the Pizza model to type the selected pizza
+import { Pizza } from '../../models/pizza.model';
+
+
+
 export const getPizzaState = createSelector(
-  getProductsState,
-  (state: ProductsState) => state.pizzas
+  // modify 1:
+  fromFeature.getProductsState,
+  (state: fromFeature.ProductsState) => state.pizzas
 )
 
 export const getPizzasEntities = createSelector(
@@ -1607,7 +1635,23 @@ export const getPizzasEntities = createSelector(
   fromPizzas.getPizzasEntities
 )
 
-// data selector
+// 6. Inside of our state tree, we're going to have a router params with a property of pizzaId , which means that we can go and compose this in our selector so what we are actually interesting in is creating a new selector ---  getSelectedPizza . We call that getSelectedPizza because when we navigate to /1 or /2  , we want to say that is the selected pizza  and we know it's the selected pizza because the route  params are telling us that we are currently at that route. So we can then go and select the piece of state necessary bring it back from store and render it in our application . This is the thinking of the flow 
+export const getSelectedPizza = createSelector(
+  getPizzasEntities,
+  // we are asking for a reference to the root of reducer which means we can access the state object on the roputer
+  fromRoot.getRouterState,
+  (entities, router): Pizza => {
+    // what we essentially want to do is use the Router state to look up an entity and this is the whole reason not just for performance resons that we get a bigger gain(利润 获益) when it comes to using an entity we don't hace to iterate over collections , we don't have to map through them to just simply update someting we can reference an entity by looking up it's ID so directly 
+    // The benefit with this is the route state will actually tell us the ID of the pizzas that we're on so what we can say is :
+
+    /* 此处非常重要，因为其点明了，route state 的selector 的使用方式    */
+    // router参数的值： 对应的就是 app/store/reducers/index.ts reducers 中的 routerReducer ， 其有一个 state 属性（这是 route store package 处理的）， state 属性是一个对象，是我们序列化之后的对象  which iwe used in the custom serializer to then bind them directly to the store if you need a specific use case we need another object from the store ,we can add directly to the RouterStateUrl and it will be available in typescript in these options ；
+    return router.state && entities[router.state.params.pizzaId]
+
+    // The selectors make it really nice , really easy and once you get used to them is absolutely fantastic on how we can compose state via different states around our application, `router.state && entities[router.state.params.pizzaId]` 即是一个新的composed state. 这就是 compose state 的意思，其是在 selector 去 compose  
+  }
+)
+
 export const getAllPizzas = createSelector(
   getPizzasEntities,
   (entities) => {
@@ -1619,22 +1663,128 @@ export const getAllPizzas = createSelector(
   }
 )
 
-// loaded selector
 export const getPizzasLoaded = createSelector(
   getPizzaState,
   fromPizzas.getPizzasLoaded
 )
 
-// loading selector
 export const getPizzasLoading = createSelector(
   getPizzaState,
   fromPizzas.getPizzasLoading
 )
 
 
+```
+
+3. store/selectors/index.ts
+
+```ts
+export * from './pizzas.selectors';
 
 ```
 
+4. store/index.ts
+
+```ts 
+export * from './selectors';
+
+```
+
+5. products.module.ts
+
+```ts
+
+export const ROUTES: Routes = [
+  {
+    path: '',
+    component: fromContainers.ProductsComponent,
+  },
+  {
+    path: 'new',
+    component: fromContainers.ProductItemComponent,
+  },
+  //1. When we actually want to select some of the route state we might actually want to be more descriptive to avoid any naming collisions or perhaps being confused of what property that is an ID actually exists in the route path . So we're going to rename this to the pizza ID 
+
+  //2. 将 pizzaId 路由放到最后，because we try to match the path 'new' first , then as a fullback we can then request that as a pizza ID 
+  {
+    path: ':pizzaId',
+    component: fromContainers.ProductItemComponent,
+  },
+];
+
+```
+
+> once we created the getSelectedPizza selector we want to go and demonstrate it working 
+
+6. products/containers/product-item/product-item.component.ts
+
+```ts
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+
+//1. import the store module
+import { Store } from '@ngrx/store';
+//2. import Observable operator for type checking
+import { Observable } from 'rxjs/Observable';
+//3. import everything from store folder
+import * as fromStore from '../../store';
+
+import { Pizza } from '../../models/pizza.model';
+
+import { Topping } from '../../models/topping.model';
+
+@Component({
+  selector: 'product-item',
+  styleUrls: ['product-item.component.scss'],
+  template: `
+    <div 
+      class="product-item">
+      <pizza-form
+        [pizza]="pizza$ | aync"
+        [toppings]="toppings"
+        (selected)="onSelect($event)"
+        (create)="onCreate($event)"
+        (update)="onUpdate($event)"
+        (remove)="onRemove($event)">
+        <pizza-display
+          [pizza]="visualise">
+        </pizza-display>
+      </pizza-form>
+    </div>
+  `,
+})
+export class ProductItemComponent implements OnInit {
+  pizza$: Observable<Pizza>;
+  visualise: Pizza;
+  toppings: Topping[];
+
+  // 4 inject the store
+  constructor(
+    private store: Store<fromStore.ProductsState>
+  ) {}
+
+  ngOnInit() {
+    // 5. we want to reference the pizza$ , because we are now going to select data from the store , we're going to add this dollar suffix  
+    this.pizza$ = this.store.select( fromStore.getSelectedPizza )
+    // via the selectors we don't have to deal with the route at all, angular's route is working in the background we can use it as we like , but when it comes to components and composition of the data we can use the benefit of using the single state tree and actually use a query via selector to ask for that route state and then compose it agianst some of our entities which is exactly what we're ding here 
+  }
+
+  onSelect(event: number[]) {}
+
+  onCreate(event: Pizza) {}
+
+  onUpdate(event: Pizza) {}
+
+  onRemove(event: Pizza) {
+    const remove = window.confirm('Are you sure?');
+    if (remove) {
+    }
+  }
+}
+
+
+```
+
+we will see when we click on a pizza and refresh that the pizza name will actually disappear , this is because we don't have any guards to actually protect these routes and make sure that those pizzas exist in the store before we try access them . 路由守卫， 应该是自己待破译的重点；
 
 
 
@@ -1658,7 +1808,7 @@ export const getPizzasLoading = createSelector(
 
 
 
-
+褪其形， 研其义；
 
 
 
