@@ -1784,7 +1784,172 @@ export class ProductItemComponent implements OnInit {
 
 ```
 
-we will see when we click on a pizza and refresh that the pizza name will actually disappear , this is because we don't have any guards to actually protect these routes and make sure that those pizzas exist in the store before we try access them . 路由守卫， 应该是自己待破译的重点；
+we will see when we click on a pizza and refresh that the pizza name will actually disappear , this is because we don't have any guards to actually protect these routes and make sure that those pizzas exist in the store before we try access them .
+
+Use the route state alonside our data structures to actually compose the state very easily using the selectors and we've also looked at using a selectors folder and creating a selector file to manage things at a bigger scale because when our application scale we need to know that the folder structure is going to scale with us 
+
+
+## c16 Further Action Creators --- load the toppings 
+
+so far we have covered a lot of ground with the ngrx store and effects , we've touched on effects ever so slightly . In the next what we want to do is to take a deeper dive into the effects where we can start to hook up thing such as creating , updating , removing those pieces , so we'll be focusing things like effects and reducers in much detail in the next .
+
+In this what we're actually going to do is set up the ability to loading our toppings , now what we want to do and I deliberately recorded it in this way to give you the information that you need so you can see the bigger picture od ngrx store 
+
+
+> We don't have any topping that we can click and select . The reason we don't have any of these topping is because the actually exist in the database , so if you imagine this was some kind of pizza restaurant and you have mutiple stores , it  may be that in fact one store has different toppings to another store , so we want to dynamically load them per pizzas store , so that's why we can't see any toppings and they are dynamically rendered based on the JSON response that we get back when 
+
+```bash
++-- store
+    +-- actions
+        +-- index.ts
+        +-- pizzas.actions.ts
+        +-- toppings.actions.ts
+
+```
+
+1. set up a new set of actions  in toppings.actions.ts
+
+```ts
+/* toppings.actions.ts */
+
+//1. import the action interface
+import { Action } from '@ngrx/store';
+
+// import the topping model
+import { Topping } from '../../models/topping.model';
+
+export const LOAD_TOPPINGS = '[Products] Load Toppings';
+export const LOAD_TOPPINGS_FAIL = '[Products] Load Toppings Fail';
+export const LOAD_TOPPINGS_SUCCESS = '[Products] Load Toppings Success';
+
+export class LoadToppings implements Action {
+  readonly type = LOAD_TOPPINGS;
+}
+
+export class LoadToppingFail implements Action {
+  readonly type = Load_TOPPINGS_FAIL;
+  constructor( public payload: any ){}
+}
+
+export class LoadToppingSuccess implements Action {
+  readonly type = Load_TOPPINGS_SUCCESS;
+  constructor( public payload: Topping[] ){}
+}
+
+// in the db.json , we have the topping , each topping has an ID and has it's name . `we could expand this rach topping could have a variant of a price ,we could allow mutilple selections of extra toppings `  This data structure management will give you that capablity so you've got all of the base knowledge that you need to build out any kind of data structure in your ngrx store and learn how compose things against things like the route state and using the create selector to create your own different state selectors .
+
+export type ToppingsAction = 
+  | LoadToppings 
+  | LoadToppingsFail 
+  | LoadToppingsSuccess
+
+```
+
+2. update store/actions/index.ts
+
+```ts
+export * from './pizzas.action';
+export * from './toppings.action';
+
+```
+
+3. update products/containers/product-item.ts
+
+```ts
+ ngOnInit() {
+    // dispath the topping action to load the toppings
+    this.store.dispatch(new fromStore.LoadTopping());
+    this.pizza$ = this.store.select(fromStore.getSelectedPizza);
+  }
+
+
+```
+
+## c17 Multiple Reducers
+
+Now what we want to do is go ahead and set up our second reducer where we're going to use some of actions that we just created in our toppings.action.ts file . We're going to then use them in a topping.reducers.ts
+
+```bash
++-- store
+    +-- actions
+        +-- index.ts
+        +-- pizzas.actions.ts
+        +-- toppings.actions.ts
+    +-- reducers
+        +-- index.ts
+        +-- pizzas.reducer.ts
+        +-- toppings.reducer.ts
+
+```
+
+1. set up toppings.reducer.ts
+
+```ts
+//1. import things that relate to toppings actions 
+import * as fromToppings from '../actions/toppings.action';
+
+//2. import the toppings model
+import { Topping } from '../../models/topping.model';
+
+//3. define the ToppingState interface
+export interface ToppingsState {
+  entities: { [id: number]: Topping };
+  loaded: boolean;
+  loading: boolean;
+} 
+
+//4. set up the initialState: 
+ToppingsState = {
+  entities: {},
+  loaded: false,
+  loading: false,
+}
+
+//5. set up the reducer function
+export function reducer(
+  state: initialState,
+  action: fromToppings.ToppingsAction
+): ToppingsState {
+  switch ( action.type ) {
+    case fromToppings.LOAD_TOPPINGS: {
+      return {
+        // slightly copy
+        ...state,
+        loading: true
+      }
+    }
+
+    case fromToppings.LOAD_TOPPINGS_SUCCESS: {
+      const toppings = action.payload;
+
+      const entities = toppings.reducer(
+        (entities: {[id: number]: Topping}, topping: Topping) = >{
+          return {
+            ...entities,
+            [topping.id]: topping,
+          };
+        },
+        {
+          ...state.entities
+        }
+      )
+
+
+      return {
+        ...state,
+        loading: false,
+        loaded: true,
+        entities
+      }
+    }
+  }
+}
+
+
+
+```
+
+
 
 
 

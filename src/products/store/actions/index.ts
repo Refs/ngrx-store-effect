@@ -1,1 +1,1 @@
-export * from './pizzas.acton';
+export * from './pizzas.action';
