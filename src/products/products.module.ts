@@ -26,11 +26,11 @@ export const ROUTES: Routes = [
     component: fromContainers.ProductsComponent,
   },
   {
-    path: ':id',
+    path: 'new',
     component: fromContainers.ProductItemComponent,
   },
   {
-    path: 'new',
+    path: ':PizzaId',
     component: fromContainers.ProductItemComponent,
   },
 ];
