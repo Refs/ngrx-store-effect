@@ -2103,5 +2103,11 @@ export * from './toppings.effect';
 
 > https://stackoverflow.com/questions/50915527/variable-is-declared-but-its-value-is-never-read-vscode/50915887
 
+2. How to clone all remote branches in Git?
+https://stackoverflow.com/questions/67699/how-to-clone-all-remote-branches-in-git
+
+3. Compare branches
+https://github.com/eamodio/vscode-gitlens/issues/115
+
 
 
