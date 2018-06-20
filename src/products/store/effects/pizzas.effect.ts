@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 import { Actions, Effect } from '@ngrx/effects';
 
-import * as pizzaActions from '../actions/pizzas.acton';
+import * as pizzaActions from '../actions/pizzas.action';
 
 import * as fromService from '../../services';
 

@@ -1899,15 +1899,15 @@ export interface ToppingsState {
 } 
 
 //4. set up the initialState: 
-ToppingsState = {
+export const initialState: ToppingsState = {
   entities: {},
   loaded: false,
-  loading: false,
-}
+  loading: false
+};
 
 //5. set up the reducer function
 export function reducer(
-  state: initialState,
+  state = initialState,
   action: fromToppings.ToppingsAction
 ): ToppingsState {
   switch ( action.type ) {
@@ -1933,8 +1933,6 @@ export function reducer(
           ...state.entities
         }
       )
-
-
       return {
         ...state,
         loading: false,
@@ -1942,15 +1940,135 @@ export function reducer(
         entities
       }
     }
+    
+    case fromToppings.LOAD_TOPPINGS_FAIL: {
+      return {
+        ...state,
+        loaded: false,
+        loading: false
+      }
+    }
   }
 }
 
+// set up selector functions
+export const getToppingsEntities = (state: ToppingState) => state.entities;
+export const getToppingsLoaded= (state: ToppingState) => state.loaded;
+export const getToppingsLoading= (state: ToppingState) => state.loading;
+
+```
+
+2. updating the reducers/index.ts file
+
+```ts
+/* reducers/index.ts */
+
+import { ActionReducerMap, createFeatureSelector } from '@ngrx/store';
+import * as fromPizzas from './pizzas.reducer';
+
+//1. import everything from toppings.reducer.ts
+import * as fromToppings from './toppings.reducer'
+
+//2. register toppings state on our products state interface 
+export interface ProductsState {
+  pizzas: fromPizzas.PizzaState,
+  // our toppings is automatically going to be registered in our store module and it's automatically registered, because our reducer is constant 
+  toppings: formToppings.ToppingsState
+}
+
+//3. register the toppings reducer on the reducers interface
+export const reducers: ActionReducerMap<ProductsState> = {
+  pizzas: fromPizzas.reducer,
+  toppings: fromToppings.reducer
+}
+
+export const getProductsState = createFeatureSelector<ProductsState>('products');
 
 
 ```
 
+## c18 Creating @Effects
 
+> We don't have effect and selector which are exactly what we will be coding
 
+```bash
++-- store
+    +-- actions
+        +-- index.ts
+        +-- pizzas.actions.ts
+        +-- toppings.actions.ts
+    +-- reducers
+        +-- index.ts
+        +-- pizzas.reducer.ts
+        +-- toppings.reducer.ts
+    +-- effects  
+        +-- index.ts
+        +-- pizzas.effect.ts
+        +-- toppings.effect.ts
+
+```
+
+1. new toppings.effect.ts
+
+```ts
+//1. As we know an effect is an injectable , so we need to import the Injectable interface
+import { Injectable } from '@angular/core';
+
+// 2. We can then mark our effects class as an injectable and then start using that effect decorator , So let's also import the Effect decorator 
+import { Effect, Actions } from '@ngrx/effects';
+
+// 3. import the rxjs operator 
+import { of } from 'rxjs/observable/of';
+import { map, catchError, switchMap } from 'rxjs/operators';
+
+// 4. import angular services
+import * as fromServices from '../../services/topping.service';
+
+// 5. import relevant actions
+import * as toppingsActions from '../actions/toppings.action';
+
+// 6. set up the toppingEffects class
+@Injectable()
+export class ToppingsEffects {
+
+  constructor(
+    private actions$: Actions,
+    private toppingsService: fromService.ToppingsService
+  ) {}
+
+  // 7. set up the effect observable
+  @Effect()
+  // the loadToppings$ name could be anything we like, but we like to keep these descriptive , so we're going to keep it as loadToppings and then we can actually deal with things like update toppings , create toppings ...
+  loadToppings$ = this.actions$.ofType(toppingsActions.LOAD_TOPPINGS).pipe(
+    switchMap(()=>{
+      return this.toppingsSerivce.getToppings().pipe(
+        map(toppings => new toppingsActions.LoadToppingsSuccess(toppings)),
+        catchError(error => of(new toppingsActions.LoadToppingsFail(error)))
+      );
+    })
+  )
+
+  // Inthis effect we're only have one effect because we just care about loading toppings ， we're not in control of updating them that is not what happends in this application . However we're in control of updating , creating , and removing items form the pizza, or removing the whole pizza together . So as we continue we'll start building out the pizza effects and get a bit more depth to actually learning the efects in more detail  
+}
+
+```
+
+2. update the effects/index.ts
+
+```ts
+import { PizzasEffects } from './pizzas.effect';
+// 1. import the ToppingsEffects
+import { ToppingsEffects } from './toppings.effect';
+
+// 2. update the effects array
+export const effects: any[] = [ PizzasEffects, ToppingsEffects ];
+
+export * from './pizzas.effect';
+
+// export everything from toppings.effect 
+export * from './toppings.effect';
+
+```
 
 
 

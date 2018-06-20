@@ -3,7 +3,7 @@ import {
 } from '../../models/pizza.model';
 
 // import action file
-import * as fromPizzas from '../actions/pizzas.acton';
+import * as fromPizzas from '../actions/pizzas.action';
 
 // state slice interface
 export interface PizzaState {
