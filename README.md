@@ -2070,6 +2070,153 @@ export * from './toppings.effect';
 
 ```
 
+## c19 Topping Selectors (12-topping-selectors)
+
+```bash
++-- store
+    +-- actions
+        +-- index.ts
+        +-- pizzas.actions.ts
+        +-- toppings.actions.ts
+    +-- reducers
+        +-- index.ts
+        +-- pizzas.reducer.ts
+        +-- toppings.reducer.ts
+    +-- effects  
+        +-- index.ts
+        +-- pizzas.effect.ts
+        +-- toppings.effect.ts
+    +-- selectors
+        +-- index.ts
+        +-- pizzas.selectors.ts
+        +-- toppings.selectors.ts
+```
+
+1. new toppings.selector.ts
+
+```ts
+//1. import createSelector
+import { createSelector } from '@ngrx/store';
+
+//2. import relevant route state
+import * as fromRoot from '../../../app/store';
+
+//3. import the feature relevant to get getProductsState
+import * as fromFeature from '../reducers';
+
+//4. import the toppings selectors
+import * as fromToppings from '../reducers/toppings.reducer';
+
+//5. toppings selector
+export const getToppingsState = createSelector(
+  fromFeature.getProductsState,
+  (state: fromFeature.ProductState) => state.toppings
+)
+
+//6. topping entities selector
+export const getToppingsEntities = createSelector(
+  getToppingsState,
+  fromToppings.getToppingEntities
+);
+
+//7. Toppings[] selector
+export const getAllToppings = createSelector(
+  getToppingsEntities,
+  (entities) =>{
+    return Object.keys(entities).map(
+      id => entities[parseInt(id,10)]
+    )
+  }
+)
+
+// 8. topping loaded state selector
+export const getToppingsLoaded = createSelector(
+  getToppingsState,
+  fromToppings.getToppingsLoaded
+)
+ 
+
+//9. topping loading state selector
+export const getToppingsLoading = createSelector(
+  getToppingsState,
+  fromToppings.getToppingsLoading
+)
+
+```
+
+
+2. update store/selectors/index.ts
+
+```ts
+export * from './pizzas.selectors';
+
+// 1. export everything from toppings selector
+export * from './toppings.selectors'
+
+```
+
+3. update container/product-item/product-item.component.ts and render the
+
+```ts
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
+import * as fromStore from '../../store';
+
+import { Pizza } from '../../models/pizza.model';
+
+import { Topping } from '../../models/topping.model';
+
+@Component({
+  selector: 'product-item',
+  styleUrls: ['product-item.component.scss'],
+  template: `
+    <div
+      class="product-item">
+      <pizza-form
+        [pizza]="pizza$ | async"
+        [toppings]="toppings$ | async"
+        (selected)="onSelect($event)"
+        (create)="onCreate($event)"
+        (update)="onUpdate($event)"
+        (remove)="onRemove($event)">
+        <pizza-display
+          [pizza]="visualise">
+        </pizza-display>
+      </pizza-form>
+    </div>
+  `,
+})
+export class ProductItemComponent implements OnInit {
+  pizza$: Observable<Pizza>;
+  visualise: Pizza;
+  //2. update the toppings property to an observable property
+  toppings$: Observable<Topping[]>;
+
+  constructor( private store: Store<fromStore.ProductsState> ) {}
+
+  ngOnInit() {
+    this.store.dispatch(new fromStore.LoadToppings());
+    this.pizza$ = this.store.select(fromStore.getSelectedPizza);
+    // 1. get the toppings[] from the current state tree with getAllToppings selector
+    this.toppings$ = this.store.select(fromStore.getAllToppings)
+  }
+
+  onSelect(event: number[]) {}
+
+  onCreate(event: Pizza) {}
+
+  onUpdate(event: Pizza) {}
+
+  onRemove(event: Pizza) {
+    const remove = window.confirm('Are you sure?');
+    if (remove) {
+    }
+  }
+}
+
+```
+
 
 
 
