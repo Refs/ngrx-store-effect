@@ -2565,7 +2565,138 @@ export const getPizzasLoading = createSelector(
 
 ## c21 visualize dispath (14-visualise-dispatch to working tree)
 
+1. update products.component.ts
 
+```ts
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+
+import { Pizza } from '../../models/pizza.model';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
+import * as fromStore from '../../store';
+
+@Component({
+  selector: 'products',
+  styleUrls: ['products.component.scss'],
+  template: `
+    <div class="products">
+      <div class="products__new">
+        <a
+          class="btn btn__ok"
+          routerLink="./new">
+          New Pizza
+        </a>
+      </div>
+      <div class="products__list">
+        <div *ngIf="!((pizzas$ | async )?.length)">
+          No pizzas, add one to get started.
+        </div>
+        <pizza-item
+          *ngFor="let pizza of (pizzas$ | async )"
+          [pizza]="pizza">
+        </pizza-item>
+      </div>
+    </div>
+  `,
+})
+export class ProductsComponent implements OnInit {
+  pizzas$: Observable<Pizza[]>;
+
+  constructor(private store: Store<fromStore.ProductsState>) {
+  }
+
+  ngOnInit() {
+
+    this.pizzas$ = this.store.select(fromStore.getAllPizzas);
+    this.store.dispatch(new fromStore.LoadPizzas());
+    // dispatch the LoadToppings action
+    this.store.dispatch(new fromStore.LoadToppings());
+
+  }
+}
+
+```
+
+2. update product-item.component.ts
+
+```ts
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
+import * as fromStore from '../../store';
+
+//1. import the tap(窃听) operator 
+import { tap } form 'rxjs/operators';
+
+import { Pizza } from '../../models/pizza.model';
+
+import { Topping } from '../../models/topping.model';
+
+@Component({
+  selector: 'product-item',
+  styleUrls: ['product-item.component.scss'],
+  template: `
+    <div
+      class="product-item">
+      <pizza-form
+        [pizza]="pizza$ | async"
+        [toppings]="toppings$ | async"
+        (selected)="onSelect($event)"
+        (create)="onCreate($event)"
+        (update)="onUpdate($event)"
+        (remove)="onRemove($event)">
+        <pizza-display
+          [pizza]="visualise">
+        </pizza-display>
+      </pizza-form>
+    </div>
+  `,
+})
+export class ProductItemComponent implements OnInit {
+  pizza$: Observable<Pizza>;
+  visualise$: Observable<Pizza>;
+  toppings$: Observable<Topping[]>;
+
+  constructor( private store: Store<fromStore.ProductsState> ) {}
+
+  ngOnInit() {
+    // 2. remove this dispatch action
+    // this.store.dispatch(new fromStore.LoadToppings());
+
+    //3. update the this.pizza$ 及当路由到product-item 页面的时候， 如果selected pizza 拥有 toppings 则将这些tappings 渲染出来；
+    this.pizza$ = this.store.select(fromStore.getSelectedPizza)
+                  .pipe(
+                    tap((pizza: Pizza = null)=>{
+                      const pizzaExists = !!(pizza && pizza.tappings);
+                      const toppings = pizzaExists 
+                        ? pizza.toppings.map( topping => topping.is )
+                        :[];
+                      this.store.dispatch(new fromStore.visualiseToppings(toppings))
+                    })
+                  );
+    this.toppings$ = this.store.select(fromStore.getAllToppings);
+    //3. update the visualise property
+    this.visualise$ =  this.store.select(fromStore.getPizzaVisualised)
+  }
+
+  onSelect(event: number[]) {
+    //4. when user toggle the toppings button trick this dispatch action  当用户 改变pizza 对应的toppings 的时候，可以试试的去改变；
+    // console.log('onSelect:::', event)
+    this.store.dispatch( new fromStore.visualiseToppings(event) );
+  }
+
+  onCreate(event: Pizza) {}
+
+  onUpdate(event: Pizza) {}
+
+  onRemove(event: Pizza) {
+    const remove = window.confirm('Are you sure?');
+    if (remove) {
+    }
+  }
+}
+
+```
 
 
 
