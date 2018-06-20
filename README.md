@@ -2219,6 +2219,8 @@ export class ProductItemComponent implements OnInit {
 
 ## c20 Selected Toppings (13-selected-toppings to working tree)
 
+> when we toggle the toppings button under the big pizza picture, we can synchronously see the topping's change on the pizza, which like the pet-tag.
+
 ```bash
 +-- store
     +-- actions
@@ -2436,10 +2438,132 @@ export const getToppingsEntities = (state: ToppingsState) => state.entities;
 export const getToppingsLoaded = (state: ToppingsState) => state.loaded;
 export const getToppingsLoading = (state: ToppingsState) => state.loading;
 
-//4. add getSelectedToppings selector
+//4. add getSelectedToppings selector function
 export const getSelectedToppings = (state: ToppingsState) => state.selectedToppings;
 
 ```
+
+4. update toppings.selectors.ts
+
+```ts
+import { createSelector } from '@ngrx/store';
+
+import * as fromRoot from '../../../app/store';
+
+import * as fromFeature from '../reducers';
+
+import * as fromToppings from '../reducers/toppings.reducer';
+
+export const getToppingsState = createSelector(
+  fromFeature.getProductsState,
+  (state: fromFeature.ProductsState) => state.toppings
+)
+
+//1. add getSelectedToppings selector to get the number[]
+export const getSelectedToppings = createSelector(
+  getToppingsState,
+  fromToppings.getSelectedToppings
+)
+
+export const getToppingsEntities = createSelector(
+  getToppingsState,
+  fromToppings.getToppingsEntities
+)
+
+export const getAllToppings = createSelector(
+  getToppingsEntities,
+  (entites) => {
+    return Object.keys(entites).map((id)=>{
+      return entites[parseInt(id,10)]
+    })
+  }
+)
+
+export const getToppingsLoaded = createSelector(
+  getToppingsState,
+  fromToppings.getToppingsLoaded
+)
+
+export const getToppingsLoading = createSelector(
+  getToppingsState,
+  fromToppings.getToppingsLoading
+)
+
+
+```
+
+5. update pizzas.selector.ts to sync the selected pizzas toppings
+
+```ts
+import { createSelector } from '@ngrx/store';
+
+import * as fromFeature from '../reducers';
+
+import * as fromPizzas from '../reducers/pizzas.reducer';
+
+import * as fromRoot from '../../../app/store';
+
+//1. import the toppings selector file to utilize getSelectedToppings to get the number[]
+import * as fromToppings from './toppings.selectors'
+
+
+export const getPizzaState = createSelector(
+  fromFeature.getProductsState,
+  (state: fromFeature.ProductsState) => state.pizzas
+)
+
+export const getPizzasEntities = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasEntities
+)
+
+export const getSelectedPizza = createSelector(
+  fromRoot.getRouterState,
+  getPizzasEntities,
+  (router, entities) => {
+    return router.state && entities[router.state.params.PizzaId]
+  }
+)
+
+//2. add the new getPizzaVisualised
+export const getPizzaVisualised = createSelector(
+  getSelectedPizza,
+  fromToppings.getToppingsEntities,
+  fromToppings.getSelectedToppings,
+  (pizza, toppingsEntities, selectedToppings) => {
+    const toppings = selectedToppings.map(id => toppingsEntities[id]);
+    return {
+      ...pizza,
+      toppings
+    }
+  }
+)
+
+export const getAllPizzas = createSelector(
+  getPizzasEntities,
+  (entities) => {
+    return Object.keys(entities).map(
+      (id) => {
+       return entities[parseInt(id)];
+      }
+    )
+  }
+)
+
+export const getPizzasLoaded = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasLoaded
+)
+
+export const getPizzasLoading = createSelector(
+  getPizzaState,
+  fromPizzas.getPizzasLoading
+)
+
+
+```
+
+## c21 visualize dispath (14-visualise-dispatch to working tree)
 
 
 
@@ -2461,6 +2585,7 @@ export const getSelectedToppings = (state: ToppingsState) => state.selectedToppi
 
 
 褪其形， 研其义；
+要成长 锻炼 也很重要， 不要光想着去依赖别人； 大胆去使用新的技术，并主动去承担 后续的维护，才能够去得到锻炼；
 
 
 
