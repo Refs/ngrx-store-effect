@@ -11,8 +11,7 @@ import { Topping } from '../../models/topping.model';
   selector: 'product-item',
   styleUrls: ['product-item.component.scss'],
   template: `
-    <div
-      class="product-item">
+    <div class="product-item">
       <pizza-form
         [pizza]="pizza$ | async"
         [toppings]="toppings$ | async"
@@ -40,7 +39,9 @@ export class ProductItemComponent implements OnInit {
     this.toppings$ = this.store.select(fromStore.getAllToppings);
   }
 
-  onSelect(event: number[]) {}
+  onSelect(event: number[]) {
+    console.log('onSelect:::', event)
+  }
 
   onCreate(event: Pizza) {}
 

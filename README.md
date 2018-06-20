@@ -2155,7 +2155,7 @@ export * from './toppings.selectors'
 
 ```
 
-3. update container/product-item/product-item.component.ts and render the
+3. update container/product-item/product-item.component.ts and render the view
 
 ```ts
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
@@ -2217,7 +2217,229 @@ export class ProductItemComponent implements OnInit {
 
 ```
 
+## c20 Selected Toppings (13-selected-toppings to working tree)
 
+```bash
++-- store
+    +-- actions
+        +-- index.ts
+        +-- pizzas.actions.ts
+        +-- toppings.actions.ts
+    +-- reducers
+        +-- index.ts
+        +-- pizzas.reducer.ts
+        +-- toppings.reducer.ts
+    +-- effects  
+        +-- index.ts
+        +-- pizzas.effect.ts
+        +-- toppings.effect.ts
+    +-- selectors
+        +-- index.ts
+        +-- pizzas.selectors.ts
+        +-- toppings.selectors.ts
++-- containers
+    +-- product-item
+        +-- product-item.component.ts
+    +-- products
+        +-- products.component.ts
+
+``` 
+
+1. update the products-item.component.ts
+
+```ts
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Store } from '@ngrx/store';
+import { Observable } from 'rxjs/Observable';
+import * as fromStore from '../../store';
+
+import { Pizza } from '../../models/pizza.model';
+
+import { Topping } from '../../models/topping.model';
+
+@Component({
+  selector: 'product-item',
+  styleUrls: ['product-item.component.scss'],
+  template: `
+    <div
+      class="product-item">
+      <pizza-form
+        [pizza]="pizza$ | async"
+        [toppings]="toppings$ | async"
+        (selected)="onSelect($event)"
+        (create)="onCreate($event)"
+        (update)="onUpdate($event)"
+        (remove)="onRemove($event)">
+        <pizza-display
+          [pizza]="visualise">
+        </pizza-display>
+      </pizza-form>
+    </div>
+  `,
+})
+export class ProductItemComponent implements OnInit {
+  pizza$: Observable<Pizza>;
+  visualise: Pizza;
+  toppings$: Observable<Topping[]>;
+
+  constructor( private store: Store<fromStore.ProductsState> ) {}
+
+  ngOnInit() {
+    this.store.dispatch(new fromStore.LoadToppings());
+    this.pizza$ = this.store.select(fromStore.getSelectedPizza);
+    this.toppings$ = this.store.select(fromStore.getAllToppings)
+  }
+
+  onSelect(event: number[]) {
+    //1. console.log  the data which from child component's output property ; 
+    //2. The data is a number array---> [10, 9, 3, 4, 7, 2]
+    console.log('onSelect:::', event)
+  }
+
+  onCreate(event: Pizza) {}
+
+  onUpdate(event: Pizza) {}
+
+  onRemove(event: Pizza) {
+    const remove = window.confirm('Are you sure?');
+    if (remove) {
+    }
+  }
+}
+
+```
+
+2. update store/actions/toppings.actions.ts
+
+```ts
+import { Action } from '@ngrx/store';
+
+import { Topping } from '../../models/topping.model';
+
+export const LOAD_TOPPINGS = '[Products] Load Toppings';
+export const LOAD_TOPPINGS_FAIL = '[Products] Load Toppings Fail';
+export const LOAD_TOPPINGS_SUCCESS = '[Products] Load Toppings success';
+//1. add a new Action const
+export const VISUALISE_TOPPINGS = '[Products] Visualise Toppings';
+
+
+export class LoadToppings implements Action {
+  readonly type = LOAD_TOPPINGS;
+}
+
+export class LoadToppingsFail implements Action {
+  readonly type = LOAD_TOPPINGS_FAIL;
+  constructor( public payload: any ) {}
+}
+
+export class LoafToppingsSuccess implements Action {
+  readonly type = LOAD_TOPPINGS_SUCCESS;
+  constructor (public payload: Topping[]) {}
+}
+
+//2. add VISUALISE_TOPPINGS action creator
+export class VisualiseToppings implements Action {
+  readonly type = VISUALISE_TOPPINGS;
+  //3. this number[] is given by the onSelect(event: number[]) {} in products-item.component.ts
+  constructor (public payload: number[]) {}
+}
+
+export type ToppingsAction =
+  | LoadToppings
+  | LoadToppingsFail
+  | LoafToppingsSuccess
+  | VisualiseToppings
+
+```
+
+3. update store/reducers/toppings.reducer.ts
+
+```ts
+import * as fromToppings from '../actions/toppings.actions';
+
+import { Topping } from '../../models/topping.model';
+
+export interface ToppingsState {
+  entities: {
+    [id: number] : Topping
+  };
+  loaded: boolean;
+  loading: boolean;
+  //1. add selectedTopping property to the ToppingState interface
+  selectedToppings: number[];
+}
+
+export const initialState: ToppingsState = {
+  entities: {},
+  loaded: false,
+  loading: false,
+  //2. add the selectedTopping setted to be a empty array to the initialState
+  selectedToppings: []
+};
+
+export function reducer(
+  state = initialState,
+  action: fromToppings.ToppingsAction
+): ToppingsState {
+
+  switch(action.type) {
+
+    //3. add VISUALISE_TOPPINGS reducer case
+    case fromToppings.VISUALISE_TOPPINGS: {
+      const selectedToppings = action.payload;
+      return {
+        ...state,
+        selectedToppings
+      }
+    }
+
+    case fromToppings.LOAD_TOPPINGS: {
+      return {
+        ...state,
+        loading: true
+      }
+    }
+    case fromToppings.LOAD_TOPPINGS_FAIL: {
+      return {
+        ...state,
+        loading: false,
+        loaded: false
+      }
+    }
+    case fromToppings.LOAD_TOPPINGS_SUCCESS: {
+
+      const toppings = action.payload;
+
+      const entities = toppings.reduce(
+        (entities: {[id:number]: Topping}, topping: Topping)=>{
+          return {
+            ...entities,
+            [topping.id]: topping
+          }
+        },
+        {...state.entities}
+      )
+
+      return {
+        ...state,
+        loading: false,
+        loaded: true,
+        entities
+      }
+    }
+  }
+
+  return state
+}
+
+export const getToppingsEntities = (state: ToppingsState) => state.entities;
+export const getToppingsLoaded = (state: ToppingsState) => state.loaded;
+export const getToppingsLoading = (state: ToppingsState) => state.loading;
+
+//4. add getSelectedToppings selector
+export const getSelectedToppings = (state: ToppingsState) => state.selectedToppings;
+
+```
 
 
 
