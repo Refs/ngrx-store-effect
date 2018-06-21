@@ -2360,7 +2360,7 @@ export type ToppingsAction =
 import * as fromToppings from '../actions/toppings.actions';
 
 import { Topping } from '../../models/topping.model';
-
+   
 export interface ToppingsState {
   entities: {
     [id: number] : Topping
@@ -2646,7 +2646,7 @@ import { Topping } from '../../models/topping.model';
         (update)="onUpdate($event)"
         (remove)="onRemove($event)">
         <pizza-display
-          [pizza]="visualise">
+          [pizza]="visualise$ | async">
         </pizza-display>
       </pizza-form>
     </div>
@@ -2669,7 +2669,7 @@ export class ProductItemComponent implements OnInit {
                     tap((pizza: Pizza = null)=>{
                       const pizzaExists = !!(pizza && pizza.tappings);
                       const toppings = pizzaExists 
-                        ? pizza.toppings.map( topping => topping.is )
+                        ? pizza.toppings.map( topping => topping.id )
                         :[];
                       this.store.dispatch(new fromStore.visualiseToppings(toppings))
                     })

@@ -11,6 +11,11 @@ export const getToppingsState = createSelector(
   (state: fromFeature.ProductsState) => state.toppings
 )
 
+export const getSelectedToppings = createSelector(
+  getToppingsState,
+  fromToppings.getSelectedToppings
+)
+
 export const getToppingsEntities = createSelector(
   getToppingsState,
   fromToppings.getToppingsEntities
