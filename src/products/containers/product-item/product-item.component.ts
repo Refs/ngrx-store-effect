@@ -51,10 +51,26 @@ export class ProductItemComponent implements OnInit {
 
   onSelect(event: number[]) {
     // console.log('onSelect:::', event)
+
     this.store.dispatch(new fromStore.VisualiseToppings(event));
   }
 
-  onCreate(event: Pizza) {}
+  onCreate(event: Pizza) {
+  //  console.log(event)
+   /***
+     * {
+     *   name: "fgds",
+     *   toppings: [
+     *      {id: 2, name: 'bacon'}
+     *      {id: 3, name: 'basil'}
+     *   ]
+     * }
+     *
+     *
+    */
+   // dispatch 的时候 传进去的 pizza 是不含有 id 的， 服务器存储之后，有了id ;
+   this.store.dispatch(new fromStore.CreatePizza(event));
+  }
 
   onUpdate(event: Pizza) {}
 

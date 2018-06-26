@@ -2698,7 +2698,224 @@ export class ProductItemComponent implements OnInit {
 
 ```
 
+## C22 Creating a Pizza via dispatch, effects, reducers (15-visualise-dispatch to working tree) 
 
+1. add CREATE_PIZZA relevant actions in pizzas.action.ts
+
+```ts
+import { Action } from '@ngrx/store';
+
+import { Pizza } from '../../models/pizza.model';
+
+
+export enum PizzaActionTypes {
+  LOAD_PIZZAS = '[Products] Load Pizzas',
+  LOAD_PIZZAS_FAIL = '[Products] Load Pizzas Fail',
+  LOAD_PIZZAS_SUCCESS = '[Products] Load Pizzas success'
+}
+
+export class LoadPizzas implements Action {
+  readonly type = PizzaActionTypes.LOAD_PIZZAS;
+}
+export class LoadPizzasFail implements Action {
+  readonly type = PizzaActionTypes.LOAD_PIZZAS_FAIL;
+  constructor( public payload: any ) {
+  }
+}
+export class LoadPizzasSuccess implements Action {
+  readonly type = PizzaActionTypes.LOAD_PIZZAS_SUCCESS;
+  constructor( public payload: Pizza[] ) {
+  }
+}
+
+//1. Add create pizza action const string 
+export const CREATE_PIZZA = '[Products] Create Pizza';
+export const CREATE_PIZZA_FAIL = '[Products] Create Pizza Fail';
+export const CREATE_PIZZA_SUCCESS = '[Products] Create Pizza Success';
+
+//2. add create pizza action creator
+export class CreatePizza implements Action {
+  readonly type = CREATE_TYPE;
+  constructor (public payload: Pizza) {}
+}
+
+export class CreatePizzaFail implements Action {
+  readonly type = CREATE_PIZZA_FAIL;
+  constructor (public payload: any) {};
+}
+
+export class CreatePizzaSuccess implements Action {
+  readonly type = CREATE_PIZZA_SUCCESS;
+  constructor (public payload: Pizza) {};
+}
+
+//3. add the create class to PizzasAction
+
+export type PizzasAction = 
+  | LoadPizzas 
+  | LoadPizzasFail 
+  | LoadPizzasSuccess
+  | CreatePizza
+  | CreatePizzaFail
+  | CreatePizzaSuccess
+
+```
+
+2. update the pizzas.effect.ts
+
+```ts
+/* products/store/effects/pizzas.effect.ts */
+
+import { Injectable } from '@angular/core';
+
+import { Actions, Effect } from '@ngrx/effects';
+
+import * as pizzaActions from '../actions/pizzas.action';
+
+import * as fromService from '../../services';
+
+import { switchMap, map, catchError } from 'rxjs/operators';
+
+import { of } from 'rxjs/observable/of';
+
+
+
+@Injectable()
+export class PizzasEffects {
+
+  constructor(private actions$: Actions, private pizzasService: fromService.PizzasService) {
+  }
+
+  @Effect()
+  loadPizzas$ = this.actions$.ofType(pizzaActions.PizzaActionTypes.LOAD_PIZZAS).pipe(
+    switchMap(() => {
+      return this.pizzasService
+        .getPizzas()
+        .pipe(
+          map(pizzas => new pizzaActions.LoadPizzasSuccess(pizzas)),
+          catchError(error => of(new pizzaActions.LoadPizzasFail(error)))
+        );
+    })
+  );
+
+  // 1. add CreatePizza$ effect
+  @Effect()
+  createPizzza$ = this.actions$.ofType(pizzaActions.CREATE_PIZZA).pipe(
+    map((action: pizzaActions.CreatePizza)=>{
+      return action.payload
+    })
+    .switchMap(
+      pizza => {
+        return this.pizzasService.createPizza(pizza).pipe(
+          map(pizza => {
+            console.log(pizza);
+            return new pizzaActions.CreatePizzaSuccess(pizza)
+          }),
+          catchError(error => of(new pizzaActions.CreatePizzaFail(error)))
+        )
+      }
+    )
+  )
+}
+
+```
+
+3. update the pizzas.reducer.ts to change the state tree
+
+```ts
+import { Pizza } from '../../models/pizza.model';
+
+import * as fromPizzas from '../actions/pizzas.action';
+
+export interface PizzaState {
+  entities: {[id: number]: Pizza}
+  loaded: boolean;
+  loading: boolean;
+}
+
+export const initialState: PizzaState = {
+  entities: {},
+  loaded: false,
+  loading: false
+};
+
+export function reducer(
+  state = initialState,
+  action: fromPizzas.PizzasAction
+): PizzaState {
+  switch (action.type) {
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS:
+      {
+        return {
+          ...state,
+          loading: true
+        }
+      }
+
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS_SUCCESS:
+      {
+        const pizzas = action.payload;
+        const entities = pizzas.reduce(
+          (entities: {[id: number]: Pizza}, pizza: Pizza) => {
+            return {
+              ...entities,
+              [pizza.id]: pizza
+            }
+          }
+          ,{
+             ...state.entities
+          }
+        )
+        return {
+          ...state,
+          loading: false,
+          loaded: true,
+          entities
+        }
+      }
+
+    case fromPizzas.PizzaActionTypes.LOAD_PIZZAS_FAIL:
+      {
+        return {
+          ...state,
+          loading: false,
+          loaded: false
+        }
+      }
+
+    //1. add CREATE_PIZZA_SUCCESS reducer
+    case fromPizzas.CREATE_PIZZA_SUCCESS: {
+      const pizza  = action.payload;
+      const entities = {
+        ...state.entities,
+        [pizza.id]: pizza
+      }
+      return {
+        ...state,
+        entities
+      }
+    }
+  }
+  return state;
+}
+
+export const getPizzasEntities = (state: PizzaState) => state.entities;
+export const getPizzasLoaded = (state: PizzaState) => state.loaded;
+export const getPizzasLoading = (state: PizzaState) => state.loading;
+
+```
+
+4. update product-item.component.ts
+
+```ts
+// add the dispatch action
+onCreate(event: Pizza) {
+  this.store.dispatch(new fromStore.CreatePizza(event));
+}
+
+```
+
+## C23 Creating a Pizza via dispatch, effects, reducers
 
 
 
