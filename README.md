@@ -3052,6 +3052,77 @@ onUpdate(event: Pizza) {
 
 ```
 
+## c24 Remove pizza ( 17-remove-pizza to Working Tree)
+
+1. update the pizzas.actions.ts
+
+```ts
+export const REMOVE_PIZZA = '[Products] Remove Pizza';
+export const REMOVE_PIZZA_FAIL = '[Products] Remove Pizza Fail';
+export const REMOVE_PIZZA_SUCCESS = '[Products] Remove Pizza Success';
+
+export class RemovePizza implements Action {
+  readonly type = REMOVE_PIZZA;
+  constructor(public payload: Pizza) {}
+}
+
+export class RemovePizzaFail implements Action {
+  readonly type = REMOVE_PIZZA_FAIL;
+  constructor(public payload: any) {}
+}
+
+export class RemovePizzaSuccess implements Action {
+  readonly type = REMOVE_PIZZA_SUCCESS;
+  constructor(public payload: Pizza) {}
+}
+
+export type PizzasAction = 
+  | LoadPizzas
+  | LoadPizzasFail
+  | LoadPizzasSuccess
+  | CreatePizza
+  | CreatePizzaFail
+  | CreatePizzaSuccess
+  | UpdatePizza
+  | UpdatePizzaFail
+  | UpdatePizzaSuccess
+  | RemovePizza
+  | RemovePizzaFail
+  | RemovePizzaSuccess;
+
+
+```
+
+2. update pizzas.effect.ts
+
+```ts
+@Effect()
+removePizza$ = this.actions$.ofType(pizzaActions.REMOVE_PIZZA).pipe(
+  map((action: pizzaAction.RemovePizza) => action.payload),
+  switchMap(pizza => {
+    return this.pizzaService.removePizza(pizza).pipe(
+      map(()=> new pizzaActions.RemovePizzaSuccess(pizza)),
+      catchError(error => of(new pizzaActions.RemovePizzaFail(error)))
+    )
+  })
+) 
+
+```
+
+3. update pizzas.reducer.ts
+
+```ts
+case fromPizzas.REMOVE_PIZZA_SUCCESS: {
+  const pizza = action.payload;
+  const { [pizza.id]: removed, ...entities } = state.entities;
+  return {
+    ...state,
+    entities
+  }
+}
+
+```
+
 
 
 
