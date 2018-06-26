@@ -2698,7 +2698,7 @@ export class ProductItemComponent implements OnInit {
 
 ```
 
-## C22 Creating a Pizza via dispatch, effects, reducers (15-visualise-dispatch to working tree) 
+## C22 Creating a Pizza via dispatch, effects, reducers (15-create a piza) 
 
 1. add CREATE_PIZZA relevant actions in pizzas.action.ts
 
@@ -2915,7 +2915,142 @@ onCreate(event: Pizza) {
 
 ```
 
-## C23 Creating a Pizza via dispatch, effects, reducers
+## C23 Update the pizza and switch fallthrough (15-update-piza to working tree)
+
+1. update pizzas.action.ts
+
+```ts
+// add action constant 
+export const UPDATE_PIZZA = '[Products] Update Pizza';
+export const UPDATE_PIZZA_FAIL = '[Products] Update Pizza Fail';
+export const UPDATE_PIZZA_SUCCESS = '[Products] Update Pizza Success';
+
+//add new action creator
+export class UpdatePizza implements Action {
+  readonly type = UPDATE_PIZZA;
+  constructor(public payload: Pizza) {}
+}
+
+export class UpdatePizzaFail implements Action {
+  readonly type = UPDATE_PIZZA_FAIL;
+  constructor(public payload: any) {}
+}
+
+export class UpdatePizzaSuccess implements Action {
+  readonly type = UPDATE_PIZZA_SUCCESS;
+  constructor(public payload: Pizza) {}
+}
+
+// add new type
+export type PizzaAction = 
+  | LoadPizzas
+  | LoadPizzasFail
+  | LoadPizzasSuccess
+  | CreatePizza
+  | CreatePizzaFail
+  | CreatePizzaSuccess
+  | UpdatePizza
+  | UpdatePizzaFail
+  | UpfatePizzaSuccess;
+
+```
+
+2. update pizzas.effect.ts
+
+```ts
+import { Injectable } from '@angular/core';
+
+import { Actions, Effect } from '@ngrx/effects';
+
+import * as pizzaActions from '../actions/pizzas.action';
+
+import * as fromService from '../../services';
+
+import { switchMap, map, catchError } from 'rxjs/operators';
+
+import { of } from 'rxjs/observable/of';
+
+
+
+@Injectable()
+export class PizzasEffects {
+
+  constructor(private actions$: Actions, private pizzasService: fromService.PizzasService) {
+  }
+
+  @Effect()
+  loadPizzas$ = this.actions$.ofType(pizzaActions.PizzaActionTypes.LOAD_PIZZAS).pipe(
+    switchMap(() => {
+      return this.pizzasService
+        .getPizzas()
+        .pipe(
+          map(pizzas => new pizzaActions.LoadPizzasSuccess(pizzas)),
+          catchError(error => of(new pizzaActions.LoadPizzasFail(error)))
+        );
+    })
+  );
+
+  @Effect()
+  createPizza$ = this.actions$.ofType(pizzaActions.PizzaActionTypes.CREATE_PIZZA).pipe(
+    map((action: pizzaActions.CreatePizza) => {
+      return action.payload
+    }),
+    switchMap((pizza) => {
+      return this.pizzasService.createPizza(pizza).pipe(
+        map(pizza => {
+          console.log(pizza);
+          return new pizzaActions.CreatePizzaSuccess(pizza)
+        }),
+        catchError(error => of(new pizzaActions.CreatePizzaFail(error)))
+      )
+    })
+  )
+
+  // add UPDATE_PIZZA effect
+  @Effect()
+  updatePizza$ = this.action$.ofType(pizzaActions.UPDATE_PIZZA).pipe(
+    map((action: pizzaActions.UpdatePizza) => {
+      return action.payload
+    }),
+    switchMap(
+      pizza => {
+        return this.pizzaService.updatePizza(pizza).pipe(
+          map(pizza => new pizzaActions.UpdatePizzaSuccess(pizza)),
+          catchError(error => of(new pizzaActions.UpdatePizzaFail(error)))
+        );
+      }
+    )
+  )
+}
+
+```
+
+3. update pizzas.reducer.ts
+
+```ts
+case fromPizzas.CREATE_PIZZA_SUCCESS: 
+case fromPizzas.UPDATE_PIZZA_SUCCESS: {
+  const pizza = action.payload;
+  const entities = {
+    ...state.entities,
+    [pizza.id]:pizza
+  }
+  return {
+    ...state,
+    entites,
+  }
+}
+
+```
+
+4. update product-item.component.ts
+
+```ts
+onUpdate(event: Pizza) {
+  this.store.dispatch(new fromStore.UpdatePizza(event));
+}
+
+```
 
 
 
@@ -2928,9 +3063,8 @@ onCreate(event: Pizza) {
 
 
 
-
-
-
+臣出身卑微，幸的贵人赏识，
+臣定当抛汗洒血，不负您的知遇之恩；
 
 褪其形， 研其义；
 要成长 锻炼 也很重要， 不要光想着去依赖别人； 大胆去使用新的技术，并主动去承担 后续的维护，才能够去得到锻炼；
