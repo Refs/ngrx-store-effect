@@ -3114,6 +3114,24 @@ removePizza$ = this.actions$.ofType(pizzaActions.REMOVE_PIZZA).pipe(
 ```ts
 case fromPizzas.REMOVE_PIZZA_SUCCESS: {
   const pizza = action.payload;
+  /***
+   * const { [pizza.id]: removed, ...entities } = state.entities; 这个式子应该是最难的；
+   * 1. 一般的情况 我们都是 已知 两个对象  const a = {pa1:1, pa2:2} ; const b= {pb1:1, pb2:2}; 
+   * 2. 然后通过 spread 运算符将其解析到一个对象里面 let c = {...a, ...b}
+   * 3. console.log(c) // {pa1:1, pa2:2, pb1:1, pb2:2}
+   * 
+   * 4. 而现在自己面对的问题是 [pizza.id] 字符串是标识符已知的， state.entities 对象是已知的，而被解析的对象 entities  是未知的
+   * 5. 情况与上面完全不同，应转变思维，区别对待；
+   * 
+   * let obj = {a:1, b:2, c:3  }
+   * const {b: any, ...spobj} = obj;
+   * console.log(spobj) // {a:1, c:3} ; 也就是说，只要左面的标识符已出现，如 b: any ; 被spread 的对象在执行浅拷贝的标识符 b 所对应的内容；
+   * 
+   * 同理 const { [pizza.id]: removed, ...entities } = state.entities; 中 entities 在去拷贝 state.entities 中的内容的时候，不会去拷贝[pizza.id] 以及它对应的内容；
+   * 也就是说 entities 是 state.entities 对象 不含 [pizza.id] 属性的 一份 copy;
+   * 
+   * 
+   * ***/ 
   const { [pizza.id]: removed, ...entities } = state.entities;
   return {
     ...state,
@@ -3155,6 +3173,7 @@ https://stackoverflow.com/questions/67699/how-to-clone-all-remote-branches-in-gi
 
 3. Compare branches
 https://github.com/eamodio/vscode-gitlens/issues/115
+
 
 
 
