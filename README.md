@@ -1,5 +1,7 @@
 #  ngrx
 
+> when we read the document, we should asumme we are listening the youtube video, every world should be accepted by ears and writed by hand. 读文档的时候，要有听视频看字幕的感觉，虽然会很慢，但好在印象深刻；
+
 ## 术语
 
 1. Creators : 类 ， 通过类我们可以去实例化（产生）一个对象；
