@@ -33,6 +33,41 @@ export class ProductsModule {}
 
 ```
 
+## how about generating outside default blueprint dir?
+
+I was able to make it work for my requirements by just setting "appRoot": ".", now the generate command takes a relative path from "src" which is just what i wanted. e.g "ng g m test" => generates test module under src while "ng g m app/test" will generate it under the app directory.
+
+```ts
+"apps": [
+    {
+      "root": "src",
+      // add a appRoot property and set value of '.'
+      "appRoot": ".",
+      "outDir": "dist",
+      "assets": [
+        "assets",
+        "favicon.ico"
+      ],
+      "index": "index.html",
+      "main": "main.ts",
+      "polyfills": "polyfills.ts",
+      "test": "test.ts",
+      "tsconfig": "tsconfig.app.json",
+      "testTsconfig": "tsconfig.spec.json",
+      "prefix": "app",
+      "styles": [
+        "styles.css"
+      ],
+      "scripts": [],
+      "environmentSource": "environments/environment.ts",
+      "environments": {
+        "dev": "environments/environment.ts",
+        "prod": "environments/environment.prod.ts"
+      }
+    }
+  ],
+```
+
 ## the course preknowledge
 
 1. Feature Modules: https://angular.io/guide/feature-modules
